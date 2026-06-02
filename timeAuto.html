@@ -1,0 +1,127 @@
+<script>
+
+const buildingMap = {
+    1000000:"army",
+    1000001:"town",
+    1000002:"rco",
+    1000003:"rst",
+    1000004:"dmi",
+    1000005:"dst",
+    1000006:"barr",
+    1000007:"lab",
+    1000008:"can",
+    1000009:"rto",
+    1000011:"rdt",
+    1000012:"rde",
+    1000013:"mor",
+    1000014:"clan",
+    1000019:"nte",
+    1000020:"fac",
+    1000021:"bow",
+    1000023:"darkelixird",
+    1000024:"darkelixirst",
+    1000026:"darkbarr",
+    1000027:"fer",
+    1000028:"rsw",
+    1000029:"darkspell",
+    1000031:"gle",
+    1000032:"bto",
+    1000059:"rks",
+    1000067:"ter",
+    1000068:"pet",
+    1000070:"acksm",
+    1000071:"hero",
+    1000072:"ellt",
+    1000077:"nol"
+};
+
+function addTimers(arr, timestamp, result) {
+
+    if (!Array.isArray(arr)) return;
+
+    arr.forEach(item => {
+
+        if (!item.timer) return;
+
+        const name = buildingMap[item.data];
+
+        if (!name) return;
+
+        result.push([
+            name,
+            String((timestamp + item.timer) * 1000),
+            (item.lvl || 0) + 1
+        ]);
+    });
+}
+
+function exportTime() {
+
+    try {
+
+        const obj = JSON.parse(
+            document.getElementById("input").value
+        );
+
+        const timestamp = obj.timestamp;
+
+        // ===== time =====
+        const timeResult = [];
+        addTimers(obj.buildings, timestamp, timeResult);
+
+        // ===== timeDiff =====
+        const timeDiff = [];
+
+        // helpers
+        (obj.helpers || []).forEach(h => {
+            if (h.helper_cooldown) {
+                timeDiff.push(
+                    String((timestamp + h.helper_cooldown) * 1000)
+                );
+            }
+        });
+
+        // spells
+        (obj.spells || []).forEach(s => {
+            if (s.timer) {
+                timeDiff.push(
+                    String((timestamp + s.timer) * 1000)
+                );
+            }
+        });
+
+        // buildings2
+        (obj.buildings2 || []).forEach(b => {
+            if (b.timer) {
+                timeDiff.push(
+                    String((timestamp + b.timer) * 1000)
+                );
+            }
+        });
+
+        // clocktower
+        if (obj.boosts?.clocktower_cooldown) {
+            timeDiff.push(
+                String(
+                    (timestamp + obj.boosts.clocktower_cooldown) * 1000
+                )
+            );
+        }
+
+        // sort asc
+        timeDiff.sort((a, b) => Number(a) - Number(b));
+
+        const output =
+`accountBuildList[0].put("time", ${JSON.stringify(timeResult)})
+accountBuildList[0].put("timeDiff", ${JSON.stringify(timeDiff)})`;
+
+        document.getElementById("output").value = output;
+
+    } catch(e) {
+
+        document.getElementById("output").value =
+            "JSON lỗi:\n" + e.message;
+    }
+}
+
+</script>
