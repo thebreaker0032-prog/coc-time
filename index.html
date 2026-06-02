@@ -46,7 +46,18 @@ const buildingMap = {
     1000072:"ellt",
     1000077:"nol"
 };
-
+const accountMap = {
+    "#R0V0P2QRL": 0,
+    "#GCL0UCPYU": 1,
+    "#R9RRYVJLY": 2,
+    "#GUC8YLLCQ": 3,
+    "#GG99VG02P": 4,
+    "#GQQQ2QR02": 5,
+    "#R28PGJR2Q": 6,
+    "#R9RRL98JV": 7,
+    "#GG99VJGRP": 8,
+    "#R28Q9L9PP": 9
+};
 function addTimers(arr, timestamp, result) {
 
     if (!Array.isArray(arr)) return;
@@ -71,65 +82,148 @@ function exportTime() {
 
     try {
 
-        const obj = JSON.parse(
-            document.getElementById("input").value
-        );
+        const input = document
+            .getElementById("input")
+            .value
+            .trim();
 
-        const timestamp = obj.timestamp;
+        const objects = [];
 
-        // ===== time =====
-        const timeResult = [];
-        addTimers(obj.buildings, timestamp, timeResult);
+        let depth = 0;
+        let start = -1;
 
-        // ===== timeDiff =====
-        const timeDiff = [];
+        for (let i = 0; i < input.length; i++) {
 
-        // helpers
-        (obj.helpers || []).forEach(h => {
-            if (h.helper_cooldown) {
-                timeDiff.push(
-                    String((timestamp + h.helper_cooldown) * 1000)
-                );
+            if (input[i] === "{") {
+
+                if (depth === 0) {
+                    start = i;
+                }
+
+                depth++;
             }
-        });
 
-        // spells
-        (obj.spells || []).forEach(s => {
-            if (s.timer) {
-                timeDiff.push(
-                    String((timestamp + s.timer) * 1000)
-                );
+            if (input[i] === "}") {
+
+                depth--;
+
+                if (depth === 0) {
+
+                    objects.push(
+                        input.substring(start, i + 1)
+                    );
+                }
             }
-        });
-
-        // buildings2
-        (obj.buildings2 || []).forEach(b => {
-            if (b.timer) {
-                timeDiff.push(
-                    String((timestamp + b.timer) * 1000)
-                );
-            }
-        });
-
-        // clocktower
-        if (obj.boosts?.clocktower_cooldown) {
-            timeDiff.push(
-                String(
-                    (timestamp + obj.boosts.clocktower_cooldown) * 1000
-                )
-            );
         }
 
-        // sort asc
-        timeDiff.sort((a, b) => Number(a) - Number(b));
+        const outputs = [];
 
-        const output =
-`accountBuildList[0].put("time", ${JSON.stringify(timeResult)})
-accountBuildList[0].put("timeDiff", ${JSON.stringify(timeDiff)})`;
+        objects.forEach((jsonText) => {
 
-        document.getElementById("output").value = output;
+            const obj = JSON.parse(jsonText);
 
-    } catch(e) {
+            const accountId = accountMap[obj.tag];
+
+            if (accountId == null) {
+
+                outputs.push(
+                    `// Không tìm thấy accountMap cho tag ${obj.tag}`
+                );
+
+                return;
+            }
+
+            const timestamp = obj.timestamp;
+
+            // ===== time =====
+
+            const timeResult = [];
+
+            addTimers(
+                obj.buildings,
+                timestamp,
+                timeResult
+            );
+
+            // ===== timeDiff =====
+
+            const timeDiff = [];
+
+            // helper cooldown
+            (obj.helpers || []).forEach(h => {
+
+                if (h.helper_cooldown) {
+
+                    timeDiff.push(
+                        String(
+                            (timestamp + h.helper_cooldown) * 1000
+                        )
+                    );
+                }
+            });
+
+            // spell timer
+            (obj.spells || []).forEach(s => {
+
+                if (s.timer) {
+
+                    timeDiff.push(
+                        String(
+                            (timestamp + s.timer) * 1000
+                        )
+                    );
+                }
+            });
+
+            // builder base timer
+            (obj.buildings2 || []).forEach(b => {
+
+                if (b.timer) {
+
+                    timeDiff.push(
+                        String(
+                            (timestamp + b.timer) * 1000
+                        )
+                    );
+                }
+            });
+
+            // clock tower cooldown
+            if (
+                obj.boosts &&
+                obj.boosts.clocktower_cooldown
+            ) {
+
+                timeDiff.push(
+                    String(
+                        (
+                            timestamp +
+                            obj.boosts.clocktower_cooldown
+                        ) * 1000
+                    )
+                );
+            }
+
+            // sort tăng dần
+            timeDiff.sort(
+                (a, b) => Number(a) - Number(b)
+            );
+
+            outputs.push(
+                `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeResult)})`
+            );
+
+            outputs.push(
+                `accountBuildList[${accountId}].put("timeDiff", ${JSON.stringify(timeDiff)})`
+            );
+
+            outputs.push("");
+        });
+
+        document.getElementById("output").value =
+            outputs.join("\n");
+
+    } catch (e) {
 
         document.getElementById("output").value =
             "JSON lỗi:\n" + e.message;
