@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="vi">
+<!--  -->
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thời Gian Đến</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 12px;
+      background: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    h2 {
+      font-size: 20px;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    input,
+    select,
+    button {
+      font-size: 18px;
+      padding: 10px 12px;
+      margin: 4px;
+      background-color: #2d2d2d;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 6px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .action-buttons button {
+      flex: 1;
+      min-width: 90px;
+      background: #3a3a3a;
+      transition: background 0.2s;
+    }
+
+    .action-buttons button:hover {
+      background: #555;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #2a2a2a;
+      font-size: 16px;
+    }
+
+    th,
+    td {
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #333;
+      font-weight: bold;
+    }
+
+    tr:nth-child(even) {
+      background-color: #242424;
+    }
+
+    .remove-btn {
+      background: #444;
+      color: #eee;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      padding: 4px 6px;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 60vh;
+    }
+
+    .bottom-buttons {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+
+      .action-buttons,
+      .bottom-buttons,
+      input,
+      select,
+      #addBtn {
+        display: none;
+      }
+    }
+
+    .reuse-btn {
+      background-color: #3a3a3a;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 5px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .reuse-btn:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>⏱️ Tính thời gian đến</h2>
+  <textarea id="cocInput" style="
+    width:100%;
+    height:180px;
+    background:#2d2d2d;
+    color:white;
+    margin-bottom:10px;
+  " placeholder="Paste JSON Clash of Clans vào đây">
+</textarea>
+
+  <button onclick="importCOC()">
+    Import Clash Of Clans
+  </button>
+  <div class="input-group">
+    <input id="timeInput" type="number" placeholder="Nhập phút hoặc giờ+phút (vd: 45 hoặc 130)" inputmode="numeric">
+    <select id="hallSelect"></select>
+    <select id="typeSelect">
+      <option value="lab">lab</option>
+      <option value="pet">pet</option>
+      <option value="speed lab">speed lab</option>
+      <option value="builder hall">builder hall</option>
+      <option value="speed builder hall">speed builder hall</option>
+      <option value="builder hall x10">thợ xây x10</option>
+      <option value="builder hall x2">thợ xây x2</option>
+      <option value="lab x24">nghiên cứu x24</option>
+      <option value="lab x4">nghiên cứu x4</option>
+      <option value="normal">normal</option>
+    </select>
+    <button id="addBtn">➕ Thêm ⏱️</button>
+  </div>
+
+  <div class="action-buttons">
+    <select id="filterSelect">
+      <option value="">🔍 Tất cả Hall</option>
+    </select>
+    <button id="loadGitHubBtn">Load</button>
+    <button id="uploadGitHubBtn">Save</button>
+    <button id="resetTokenBtn">Reset</button>
+  </div>
+
+  <div class="table-container">
+    <table id="resultTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ngày đến</th>
+          <th>Giờ đến</th>
+          <th>Hall</th>
+          <th>Loại</th>
+          <th>Tổng phút</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const input = document.getElementById('timeInput');
+    const hallSelect = document.getElementById('hallSelect');
+    const typeSelect = document.getElementById('typeSelect');
+    const tableBody = document.querySelector('#resultTable tbody');
+    const filterSelect = document.getElementById('filterSelect');
+    let entries = [];
+    const STORAGE_KEY = "time_entries_v3";
+    const accountMap = {
+      "#R0V0P2QRL": "1",
+      "#GCL0UCPYU": "2",
+      "#R9RRYVJLY": "3",
+      "#GUC8YLLCQ": "4",
+      "#GG99VG02P": "5",
+      "#GQQQ2QR02": "6",
+      "#R28PGJR2Q": "7",
+      "#R9RRL98JV": "8",
+      "#GG99VJGRP": "9",
+      "#R28Q9L9PP": "10"
+    };
+    const halls = [
+      { name: "1" }, { name: "2" }, { name: "3" },
+      { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" },
+      { name: "9" }, { name: "10" }
+    ];
+    hallSelect.innerHTML =
+      halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+    function updateFilterWarnings() {
+      const now = Date.now();
+
+      // Lưu hall đang chọn
+      const currentValue = filterSelect.value;
+
+      filterSelect.innerHTML =
+        `<option value="">🔍 Tất cả Hall</option>` +
+        halls.map(h => {
+          const hallEntries = entries.filter(e =>
+            e.hall === h.name &&
+            e.timestamp > now
+          );
+
+          const hasBuilder = hallEntries.some(e => e.type === "builder hall");
+          const hasLab = hallEntries.some(e => e.type === "lab");
+          const hasSpeedBuilder = hallEntries.some(e => e.type === "speed builder hall");
+
+          let icons = "";
+
+          if (!hasBuilder) icons += " 🔨";
+          if (!hasLab) icons += " 🧪";
+          if (!hasSpeedBuilder) icons += " ⚡";
+
+          return `<option value="${h.name}">${h.name}${icons}</option>`;
+        }).join('');
+
+      // Khôi phục hall đã chọn
+      filterSelect.value = currentValue;
+    }
+
+    filterSelect.innerHTML =
+      `<option value="">🔍 Tất cả Hall</option>` +
+      halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        entries = JSON.parse(saved);
+        renderTable();
+      }
+    }
+    function addEntry(hall, type, timestamp) {
+
+      const d = new Date(timestamp);
+
+      entries.push({
+        id:
+          Date.now().toString(36) +
+          Math.random().toString(36).slice(2),
+
+        timestamp,
+
+        dateString:
+          d.toLocaleDateString("vi-VN"),
+
+        hh:
+          d.getHours().toString().padStart(2, "0"),
+
+        mm:
+          d.getMinutes().toString().padStart(2, "0"),
+
+        hall,
+        type
+      });
+    }
+    function parseTimeInput(value) {
+      const val = value.trim();
+      if (!/^\d{1,6}$/.test(val)) return 0;
+
+      if (val.length <= 2) return parseInt(val, 10);
+      if (val.length <= 4) {
+        const padded = val.padStart(4, '0');
+        const h = parseInt(padded.slice(0, -2), 10);
+        const m = parseInt(padded.slice(-2), 10);
+        return h * 60 + m;
+      }
+      const padded = val.padStart(6, '0');
+      const d = parseInt(padded.slice(0, -4), 10);
+      const h = parseInt(padded.slice(-4, -2), 10);
+      const m = parseInt(padded.slice(-2), 10);
+      return d * 24 * 60 + h * 60 + m;
+    }
+
+    function formatTimeRemaining(entry) {
+      const diffMs = entry.timestamp - Date.now();
+      if (diffMs <= 0) return "⏰ 00:00";
+
+      let totalMinutes = Math.floor(diffMs / 60000);
+      const days = Math.floor(totalMinutes / (24 * 60));
+      totalMinutes %= 24 * 60;
+      const hours = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+
+      if (days > 0) return `${days}:${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+    }
+
+    function handleInput() {
+      const value = input.value.trim();
+      const hall = hallSelect.value;
+      const type = typeSelect.value;
+
+      const isBoostItem = [
+        "builder hall x10",
+        "builder hall x2",
+        "lab x24",
+        "lab x4"
+      ].includes(type);
+
+      // Nếu không phải boost mà input sai → bỏ qua
+      if (!/^\d{1,6}$/.test(value) && !isBoostItem) {
+        input.value = '';
+        input.focus();
+        return;
+      }
+
+      // Nếu là item boost → cập nhật thời gian của hall tương ứng
+      // Nếu là item boost → cập nhật thời gian của hall tương ứng
+      if (isBoostItem) {
+        const now = Date.now();
+        const targets = entries.filter(e =>
+          e.hall === hall &&
+          (
+            (type.startsWith("builder") && e.type === "normal") ||
+            (type === "lab x24" && e.type === "lab") ||
+            (type === "lab x4" && (e.type === "lab" || e.type === "pet"))
+          )
+        );
+
+        if (targets.length === 0) {
+          alert(`⚠️ Không tìm thấy mục phù hợp (${hall}) để cập nhật.`);
+          return;
+        }
+
+        let reduceHours = 0, divideFactor = 1, threshold = 0;
+        if (type === "builder hall x10") { reduceHours = 9; divideFactor = 10; threshold = 10; }
+        if (type === "builder hall x2") { reduceHours = 1; divideFactor = 2; threshold = 2; }
+        if (type === "lab x24") { reduceHours = 23; divideFactor = 24; threshold = 24; }
+        if (type === "lab x4") { reduceHours = 3; divideFactor = 4; threshold = 4; }
+
+        const reduceMs = reduceHours * 60 * 60 * 1000;
+        const thresholdMs = threshold * 60 * 60 * 1000;
+
+        targets.forEach(t => {
+          const remaining = Math.max(t.timestamp - now, 0);
+          let newRemaining;
+
+          if (remaining >= thresholdMs) {
+            newRemaining = remaining - reduceMs;
+          } else {
+            newRemaining = remaining / divideFactor;
+          }
+
+          t.timestamp = now + newRemaining;
+
+          // 🕒 Cập nhật lại ngày và giờ đến cho đúng
+          const newDate = new Date(t.timestamp);
+          t.dateString = newDate.toLocaleDateString('vi-VN');
+          t.hh = newDate.getHours().toString().padStart(2, '0');
+          t.mm = newDate.getMinutes().toString().padStart(2, '0');
+        });
+
+        saveToStorage();
+        renderTable();
+        return;
+      }
+
+      // === Phần thêm thời gian bình thường ===
+      const now = new Date();
+      const totalMinutes = parseTimeInput(value);
+      const future = new Date(now.getTime() + totalMinutes * 60000);
+
+      const entry = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        timestamp: future.getTime(),
+        dateString: future.toLocaleDateString('vi-VN'),
+        hh: future.getHours().toString().padStart(2, '0'),
+        mm: future.getMinutes().toString().padStart(2, '0'),
+        type,
+        hall
+      };
+
+      const twoMinutes = 2 * 60000;
+      const tooClose = entries.some(e => e.hall === entry.hall && Math.abs(e.timestamp - entry.timestamp) <= twoMinutes);
+      if (tooClose) return;
+
+      entries.push(entry);
+      saveToStorage();
+      renderTable();
+
+      input.value = '';
+      input.focus();
+    }
+
+    function renderTable() {
+      const selectedHall = filterSelect.value;
+      const now = Date.now();
+
+      const filtered = entries
+        .filter(e => !selectedHall || e.hall === selectedHall)
+        .sort((a, b) => a.timestamp - b.timestamp);
+
+      tableBody.innerHTML = '';
+      filtered.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        const diff = entry.timestamp - now;
+        let color = "#e0e0e0";
+        if (diff < 0) color = "#ff6b6b";
+        else if (diff <= 10 * 60000) color = "#ffd166";
+
+        let timeCellContent = "";
+        if (diff <= 0) {
+          // Khi hết thời gian → hiển thị nút
+          timeCellContent = `<button class="reuse-btn" onclick="reuseEntry('${entry.id}')">🔁 Làm lại</button>`;
+        } else {
+          timeCellContent = formatTimeRemaining(entry);
+        }
+        row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${entry.dateString}</td>
+        <td>${entry.hh}:${entry.mm}</td>
+        <td>${entry.hall}</td>
+        <td>${entry.type}</td>
+        <td>${timeCellContent}</td>
+        <td><button class="remove-btn" onclick="removeEntry('${entry.id}')">✕</button></td>
+      `;
+        row.style.color = color;
+        tableBody.appendChild(row);
+      });
+      updateFilterWarnings();
+    }
+
+    function removeEntry(id) {
+      entries = entries.filter(e => e.id !== id);
+      saveToStorage();
+      renderTable();
+    }
+    window.removeEntry = removeEntry;
+    function reuseEntry(id) {
+      const entry = entries.find(e => e.id === id);
+      if (!entry) return;
+
+      hallSelect.value = entry.hall;
+      typeSelect.value = entry.type;
+      input.focus();
+
+      // Nếu muốn tự động xoá dòng cũ khi nhấn, bỏ comment dòng dưới:
+      // removeEntry(id);
+    }
+    window.reuseEntry = reuseEntry;
+    input.addEventListener('keydown', (e) => {
+      const triggerKeys = ['Enter', 'Tab', 'NumpadEnter', 'Next', '.', 'NumpadDecimal'];
+      if (
+        triggerKeys.includes(e.key) ||
+        e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 32 || e.key === '.'
+      ) {
+        e.preventDefault();
+        handleInput();
+      }
+    });
+
+    document.getElementById('addBtn').addEventListener('click', handleInput);
+
+    filterSelect.addEventListener('change', () => {
+      renderTable();
+      hallSelect.value = filterSelect.value || halls[0].name;
+    });
+
+    setInterval(renderTable, 60000);
+    loadFromStorage();
+
+    // --- GitHub Sync ---
+    const GITHUB_USER = "thebreaker0032-prog";
+    const REPO_NAME = "thebreaker";
+    const FILE_PATH = "time-tracker-data.json";
+
+    async function promptToken() {
+      let token = localStorage.getItem("GITHUB_TOKEN");
+      if (!token) {
+        token = prompt("🔑 Nhập GitHub Token cá nhân của bạn (PAT):");
+        if (token) localStorage.setItem("GITHUB_TOKEN", token);
+      }
+      return token;
+    }
+
+    async function loadFromGitHub() {
+      const TOKEN = await promptToken();
+      if (!TOKEN) return alert("❌ Chưa nhập token!");
+      try {
+        const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
+        const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
+        if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
+        const data = await res.json();
+        const jsonText = atob(data.content.replace(/\n/g, ""));
+        entries = JSON.parse(jsonText);
+        renderTable();
+        saveToStorage();
+        alert("✅ Đã tải dữ liệu từ GitHub!");
+      } catch (err) {
+        console.error(err);
+        alert("❌ Lỗi khi tải dữ liệu: " + err.message);
+        if (err.message.includes("401")) {
+          localStorage.removeItem("GITHUB_TOKEN");
+          alert("🔄 Token có thể sai hoặc hết hạn. Hãy thử tải lại và nhập token mới.");
+        }
+      }
+    }
+
+    async function uploadToGitHub(content) {
+      const token = await promptToken();
+      const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
+      const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
+      const data = await res.json();
+      const sha = data.sha;
+      const result = await fetch(getUrl, {
+        method: "PUT",
+        headers: {
+          "Authorization": `token ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: "Update time tracker data",
+          content: btoa(unescape(encodeURIComponent(content))),
+          sha: sha
+        }),
+      });
+      if (!result.ok) {
+        const err = await result.json();
+        alert(`❌ Lỗi upload: ${result.status} - ${err.message}`);
+      } else {
+        alert("✅ Đã cập nhật file thành công!");
+      }
+    }
+
+    document.getElementById("loadGitHubBtn").addEventListener("click", loadFromGitHub);
+    document.getElementById("uploadGitHubBtn").addEventListener("click", async () => {
+      const data = JSON.stringify(entries, null, 2);
+      await uploadToGitHub(data);
+    });
+    document.getElementById("resetTokenBtn").addEventListener("click", () => {
+      localStorage.removeItem("GITHUB_TOKEN");
+      alert("✅ Đã xoá token cũ. Khi bạn đồng bộ/tải lại, trình duyệt sẽ hỏi token mới.");
+    });
+    function applyFutureClockTower(
+      buildTimerSec,
+      clockCooldownSec,
+      clockLevel
+    ) {
+
+      if (!clockLevel) {
+        return buildTimerSec;
+      }
+
+      const boostSec =
+        ((clockLevel * 2 + 12) * 9) * 60;
+
+      let remaining = buildTimerSec;
+      let nextBoost = clockCooldownSec;
+
+      while (nextBoost < remaining) {
+
+        remaining -= boostSec;
+
+        if (remaining <= 0) {
+          return 0;
+        }
+
+        nextBoost += 22 * 3600;
+      }
+
+      return remaining;
+    }
+    function applyFutureResearchAssistant(
+      labTimerSec,
+      helperCooldownSec
+    ) {
+
+      let remaining = labTimerSec;
+      let nextUse = helperCooldownSec;
+
+      const reduceSec = 3600;      // 1h
+      const loopSec = 24 * 3600;   // 24h
+      const minWorthSec = 2 * 3600; // <2h thì bỏ
+
+      while (nextUse < remaining) {
+
+        const labRemainingAtUse =
+          remaining - nextUse;
+
+        // Nếu lúc assistant sẵn sàng mà lab
+        // chỉ còn dưới 2h thì bỏ qua
+        if (labRemainingAtUse < minWorthSec) {
+          break;
+        }
+
+        remaining -= reduceSec;
+
+        if (remaining <= 0) {
+          return 0;
+        }
+
+        nextUse += loopSec;
+      }
+
+      return remaining;
+    }
+    function importCOC() {
+
+      try {
+
+        const text =
+          document.getElementById("cocInput")
+            .value
+            .trim();
+
+        if (!text) {
+          alert("Chưa có dữ liệu");
+          return;
+        }
+
+        const obj = JSON.parse(text);
+
+        const hall = accountMap[obj.tag];
+
+        if (!hall) {
+          alert("Không tìm thấy hall: " + obj.tag);
+          return;
+        }
+
+        // Xóa dữ liệu COC cũ của hall này
+        entries = entries.filter(e =>
+          e.hall !== hall ||
+          ![
+            "builder hall",
+            "lab",
+            "pet",
+            "speed lab",
+            "speed builder hall"
+          ].includes(e.type)
+        );
+
+        const baseTime = obj.timestamp * 1000;
+
+        // ==========================
+        // CLOCK TOWER
+        // ==========================
+
+        const clockTower =
+          (obj.buildings2 || []).find(
+            b => b.data === 1000039
+          );
+
+        const clockLevel =
+          clockTower?.lvl || 0;
+
+        const clockCooldown =
+          obj.boosts?.clocktower_cooldown ??
+          Number.MAX_SAFE_INTEGER;
+
+        // Nếu Clock Tower đang nâng cấp
+        const clockTowerUpgrading =
+          !!clockTower?.timer;
+
+        function applyFutureClockTower(
+          buildTimerSec
+        ) {
+
+          // Không có Clock Tower
+          if (!clockLevel) {
+            return buildTimerSec;
+          }
+
+          // Clock Tower đang nâng cấp
+          if (clockTowerUpgrading) {
+            return buildTimerSec;
+          }
+
+          const boostSec =
+            ((clockLevel * 2 + 12) * 9) * 60;
+
+          let remaining = buildTimerSec;
+          let nextBoost = clockCooldown;
+
+          while (nextBoost < remaining) {
+
+            remaining -= boostSec;
+
+            if (remaining <= 0) {
+              return 0;
+            }
+
+            nextBoost += 22 * 3600;
+          }
+
+          return remaining;
+        }
+
+        // ==========================
+        // BUILDER BASE
+        // ==========================
+
+        (obj.buildings2 || []).forEach(item => {
+
+          if (!item.timer) return;
+
+          let predictedTimer = item.timer;
+
+          // Không áp dụng cho chính Clock Tower
+          if (item.data !== 1000039) {
+
+            predictedTimer =
+              applyFutureClockTower(
+                item.timer
+              );
+
+          }
+
+          addEntry(
+            hall,
+            "builder hall",
+            baseTime +
+            predictedTimer * 1000
+          );
+
+        });
+
+        // ==========================
+        // LAB
+        // ==========================
+
+        (obj.units || []).forEach(item => {
+
+          if (!item.timer) return;
+
+          const helperCooldown =
+            obj.helpers?.[0]?.helper_cooldown ??
+            Number.MAX_SAFE_INTEGER;
+
+          const predictedLabTimer =
+            applyFutureResearchAssistant(
+              item.timer,
+              helperCooldown
+            );
+
+          addEntry(
+            hall,
+            "lab",
+            baseTime +
+            predictedLabTimer * 1000
+          );
+
+        });
+
+        // ==========================
+        // PET
+        // ==========================
+
+        (obj.pets || []).forEach(item => {
+
+          if (!item.timer) return;
+
+          addEntry(
+            hall,
+            "pet",
+            baseTime +
+            item.timer * 1000
+          );
+
+        });
+
+        // ==========================
+        // SPEED LAB
+        // ==========================
+
+        (obj.helpers || []).forEach(item => {
+
+          if (!item.helper_cooldown) return;
+
+          addEntry(
+            hall,
+            "speed lab",
+            baseTime +
+            item.helper_cooldown * 1000
+          );
+
+        });
+
+        // ==========================
+        // SPEED BUILDER HALL
+        // ==========================
+
+        if (obj.boosts?.clocktower_cooldown) {
+
+          addEntry(
+            hall,
+            "speed builder hall",
+            baseTime +
+            obj.boosts.clocktower_cooldown * 1000
+          );
+
+        }
+
+        saveToStorage();
+        renderTable();
+
+        alert(
+          `✅ Import thành công Hall ${hall}`
+        );
+
+      }
+      catch (e) {
+
+        alert(
+          "JSON lỗi:\n" +
+          e.message
+        );
+
+        console.error(e);
+
+      }
+    }
+  </script>
+
+</body>
+
+</html>
