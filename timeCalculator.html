@@ -633,6 +633,211 @@
 
       return remaining;
     }
+    function processCOCObject(obj) {
+
+      const hall = accountMap[obj.tag];
+
+      if (!hall) {
+        console.warn(
+          "Không tìm thấy hall:",
+          obj.tag
+        );
+        return;
+      }
+
+      // Xóa dữ liệu COC cũ của hall
+      entries = entries.filter(e =>
+        e.hall !== hall ||
+        ![
+          "builder hall",
+          "lab",
+          "pet",
+          "speed lab",
+          "speed builder hall"
+        ].includes(e.type)
+      );
+
+      const baseTime =
+        obj.timestamp * 1000;
+
+      // =====================================================
+      // CLOCK TOWER
+      // =====================================================
+
+      const clockTower =
+        (obj.buildings2 || [])
+          .find(b => b.data === 1000039);
+
+      const clockCooldown =
+        obj.boosts?.clocktower_cooldown || 0;
+
+      const clockLevel =
+        clockTower?.lvl || 0;
+
+      const clockTowerUpgrading =
+        !!clockTower?.timer;
+
+      const clockReduceMinutes =
+        (clockLevel * 2 + 12) * 9;
+
+      // =====================================================
+      // BUILDER HALL
+      // =====================================================
+
+      (obj.buildings2 || []).forEach(item => {
+
+        if (!item.timer) return;
+
+        let remaining =
+          item.timer;
+
+        if (
+          !clockTowerUpgrading &&
+          clockCooldown > 0 &&
+          clockReduceMinutes > 0
+        ) {
+
+          let nextCooldown =
+            clockCooldown;
+
+          while (
+            nextCooldown < remaining
+          ) {
+
+            const remainAfterTrigger =
+              remaining -
+              nextCooldown;
+
+            if (
+              remainAfterTrigger < 7200
+            ) {
+              break;
+            }
+
+            remaining -=
+              clockReduceMinutes * 60;
+
+            nextCooldown +=
+              22 * 3600;
+          }
+        }
+
+        addEntry(
+          hall,
+          "builder hall",
+          baseTime +
+          remaining * 1000
+        );
+      });
+
+      // =====================================================
+      // LAB
+      // =====================================================
+
+      const helperCooldown =
+        obj.helpers?.[0]?.helper_cooldown || 0;
+
+      const helperFinishTime =
+        baseTime +
+        helperCooldown * 1000;
+
+      const hasRecurringHelper =
+        (obj.units || []).some(
+          u =>
+            u.timer &&
+            u.helper_recurrent === true
+        );
+
+      (obj.units || []).forEach(unit => {
+
+        if (!unit.timer) return;
+
+        let remaining =
+          unit.timer;
+
+        if (
+          unit.helper_recurrent === true &&
+          helperCooldown > 0
+        ) {
+
+          let nextCooldown =
+            helperCooldown;
+
+          while (
+            nextCooldown < remaining
+          ) {
+
+            const remainAfterTrigger =
+              remaining -
+              nextCooldown;
+
+            if (
+              remainAfterTrigger < 7200
+            ) {
+              break;
+            }
+
+            remaining -= 3600;
+
+            nextCooldown +=
+              24 * 3600;
+          }
+        }
+
+        addEntry(
+          hall,
+          "lab",
+          baseTime +
+          remaining * 1000
+        );
+      });
+
+      // =====================================================
+      // PET
+      // =====================================================
+
+      (obj.pets || []).forEach(item => {
+
+        if (!item.timer) return;
+
+        addEntry(
+          hall,
+          "pet",
+          baseTime +
+          item.timer * 1000
+        );
+      });
+
+      // =====================================================
+      // SPEED LAB
+      // =====================================================
+
+      if (
+        helperCooldown > 0 &&
+        !hasRecurringHelper
+      ) {
+
+        addEntry(
+          hall,
+          "speed lab",
+          helperFinishTime
+        );
+      }
+
+      // =====================================================
+      // SPEED BUILDER HALL
+      // =====================================================
+
+      if (clockCooldown > 0) {
+
+        addEntry(
+          hall,
+          "speed builder hall",
+          baseTime +
+          clockCooldown * 1000
+        );
+      }
+    }
     function importCOC() {
 
       try {
@@ -647,201 +852,26 @@
           return;
         }
 
-        const obj = JSON.parse(text);
+        const objects = text
+          .split(/\n+/)
+          .map(x => x.trim())
+          .filter(Boolean);
 
-        const hall = accountMap[obj.tag];
+        let count = 0;
 
-        if (!hall) {
-          alert("Không tìm thấy hall: " + obj.tag);
-          return;
-        }
+        for (const json of objects) {
 
-        // Xóa dữ liệu COC cũ của hall này
-        entries = entries.filter(e =>
-          e.hall !== hall ||
-          ![
-            "builder hall",
-            "lab",
-            "pet",
-            "speed lab",
-            "speed builder hall"
-          ].includes(e.type)
-        );
+          const obj = JSON.parse(json);
 
-        const baseTime = obj.timestamp * 1000;
+          processCOCObject(obj);
 
-        // =====================================================
-        // CLOCK TOWER
-        // =====================================================
-
-        const clockTower = (obj.buildings2 || [])
-          .find(b => b.data === 1000039);
-
-        const clockCooldown =
-          obj.boosts?.clocktower_cooldown || 0;
-
-        const clockLevel =
-          clockTower?.lvl || 0;
-
-        const clockTowerUpgrading =
-          !!clockTower?.timer;
-
-        const clockReduceMinutes =
-          (clockLevel * 2 + 12) * 9;
-
-        // =====================================================
-        // BUILDER HALL
-        // =====================================================
-
-        (obj.buildings2 || []).forEach(item => {
-
-          if (!item.timer) return;
-
-          let remaining = item.timer;
-
-          // Chỉ dự đoán nếu Clock Tower KHÔNG nâng cấp
-          if (
-            !clockTowerUpgrading &&
-            clockCooldown > 0 &&
-            clockReduceMinutes > 0
-          ) {
-
-            let nextCooldown =
-              clockCooldown;
-
-            while (nextCooldown < remaining) {
-
-              const remainAfterTrigger =
-                remaining - nextCooldown;
-
-              // Không dùng nếu còn dưới 2h
-              if (remainAfterTrigger < 7200)
-                break;
-
-              remaining -=
-                clockReduceMinutes * 60;
-
-              nextCooldown +=
-                22 * 3600;
-            }
-          }
-
-          addEntry(
-            hall,
-            "builder hall",
-            baseTime + remaining * 1000
-          );
-        });
-
-        // =====================================================
-        // LAB
-        // =====================================================
-
-        const helperCooldown =
-          obj.helpers?.[0]?.helper_cooldown || 0;
-
-        const helperFinishTime =
-          baseTime +
-          helperCooldown * 1000;
-
-        const hasRecurringHelper =
-          (obj.units || []).some(
-            u =>
-              u.timer &&
-              u.helper_recurrent === true
-          );
-
-        (obj.units || []).forEach(unit => {
-
-          if (!unit.timer) return;
-
-          let remaining =
-            unit.timer;
-
-          // Apprentice Researcher auto chạy
-          if (
-            unit.helper_recurrent === true &&
-            helperCooldown > 0
-          ) {
-
-            let nextCooldown =
-              helperCooldown;
-
-            while (nextCooldown < remaining) {
-
-              const remainAfterTrigger =
-                remaining - nextCooldown;
-
-              // tránh lãng phí
-              if (remainAfterTrigger < 7200)
-                break;
-
-              remaining -= 3600;
-
-              nextCooldown +=
-                24 * 3600;
-            }
-          }
-
-          addEntry(
-            hall,
-            "lab",
-            baseTime + remaining * 1000
-          );
-        });
-
-        // =====================================================
-        // PET
-        // =====================================================
-
-        (obj.pets || []).forEach(item => {
-
-          if (!item.timer) return;
-
-          addEntry(
-            hall,
-            "pet",
-            baseTime + item.timer * 1000
-          );
-        });
-
-        // =====================================================
-        // SPEED LAB
-        // Chỉ hiện nếu helper KHÔNG auto chạy
-        // =====================================================
-
-        if (
-          helperCooldown > 0 &&
-          !hasRecurringHelper
-        ) {
-
-          addEntry(
-            hall,
-            "speed lab",
-            helperFinishTime
-          );
-        }
-
-        // =====================================================
-        // SPEED BUILDER HALL
-        // =====================================================
-
-        if (clockCooldown > 0) {
-
-          addEntry(
-            hall,
-            "speed builder hall",
-            baseTime +
-            clockCooldown * 1000
-          );
+          count++;
         }
 
         saveToStorage();
         renderTable();
 
-        alert(
-          `✅ Import thành công Hall ${hall}`
-        );
+        alert(`✅ Import thành công ${count} account`);
 
       }
       catch (e) {
