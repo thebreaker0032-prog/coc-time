@@ -220,37 +220,105 @@
       { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" },
       { name: "9" }, { name: "10" }
     ];
+    const hallWarnings = {};
+    const warningHalls = new Set();
     hallSelect.innerHTML =
       halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+    function hasLabWasteWarning(obj) {
+
+      const helperCooldown =
+        obj.helpers?.[0]?.helper_cooldown || 0;
+
+      if (!helperCooldown) {
+        return false;
+      }
+
+      return (obj.units || []).some(unit => {
+
+        if (
+          !unit.timer ||
+          unit.helper_recurrent !== true
+        ) {
+          return false;
+        }
+
+        const remainAfterTrigger =
+          unit.timer - helperCooldown;
+
+        return (
+          remainAfterTrigger > 0 &&
+          remainAfterTrigger < 7200
+        );
+      });
+    }
     function updateFilterWarnings() {
+
       const now = Date.now();
 
-      // Lưu hall đang chọn
-      const currentValue = filterSelect.value;
+      // nhớ hall đang chọn
+      const currentValue =
+        filterSelect.value;
 
       filterSelect.innerHTML =
         `<option value="">🔍 Tất cả Hall</option>` +
-        halls.map(h => {
-          const hallEntries = entries.filter(e =>
-            e.hall === h.name &&
-            e.timestamp > now
-          );
 
-          const hasBuilder = hallEntries.some(e => e.type === "builder hall");
-          const hasLab = hallEntries.some(e => e.type === "lab");
-          const hasSpeedBuilder = hallEntries.some(e => e.type === "speed builder hall");
+        halls.map(h => {
+
+          const hallEntries =
+            entries.filter(e =>
+              e.hall === h.name &&
+              e.timestamp > now
+            );
+
+          const hasBuilder =
+            hallEntries.some(
+              e => e.type === "builder hall"
+            );
+
+          const hasLab =
+            hallEntries.some(
+              e => e.type === "lab"
+            );
+
+          const hasSpeedBuilder =
+            hallEntries.some(
+              e => e.type === "speed builder hall"
+            );
 
           let icons = "";
 
-          if (!hasBuilder) icons += " 🔨";
-          if (!hasLab) icons += " 🧪";
-          if (!hasSpeedBuilder) icons += " ⚡";
+          // Không có builder đang nâng
+          if (!hasBuilder)
+            icons += " 🔨";
 
-          return `<option value="${h.name}">${h.name}${icons}</option>`;
-        }).join('');
+          // Không có lab đang nghiên cứu
+          if (!hasLab)
+            icons += " 🧪";
 
-      // Khôi phục hall đã chọn
-      filterSelect.value = currentValue;
+          // Không có clock tower cooldown
+          if (!hasSpeedBuilder)
+            icons += " ⚡";
+
+          // Có helper_recurrent nhưng còn < 2h
+          if (
+            hallWarnings &&
+            hallWarnings[h.name] &&
+            hallWarnings[h.name].helperWaste
+          ) {
+            icons += " 🚨";
+          }
+
+          return `
+        <option value="${h.name}">
+          ${h.name}${icons}
+        </option>
+      `;
+
+        }).join("");
+
+      // khôi phục hall đã chọn
+      filterSelect.value =
+        currentValue;
     }
 
     filterSelect.innerHTML =
@@ -458,7 +526,36 @@
       });
       updateFilterWarnings();
     }
+    function renderFilterSelect() {
 
+      const select =
+        document.getElementById(
+          "filterSelect"
+        );
+
+      const currentValue =
+        select.value;
+
+      select.innerHTML =
+        '<option value="">Tất cả</option>';
+
+      halls.forEach(hall => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = hall;
+
+        option.textContent =
+          warningHalls.has(hall)
+            ? `⚠️ ${hall}`
+            : hall;
+
+        select.appendChild(option);
+      });
+
+      select.value = currentValue;
+    }
     function removeEntry(id) {
       entries = entries.filter(e => e.id !== id);
       saveToStorage();
@@ -634,9 +731,16 @@
       return remaining;
     }
     function processCOCObject(obj) {
-
       const hall = accountMap[obj.tag];
 
+      warningHalls.delete(hall);
+
+      if (hasLabWasteWarning(obj)) {
+        warningHalls.add(hall);
+      }
+      hallWarnings[hall] = {
+        helperWaste: false
+      };
       if (!hall) {
         console.warn(
           "Không tìm thấy hall:",
@@ -747,7 +851,29 @@
             u.timer &&
             u.helper_recurrent === true
         );
+      const recurringUnit =
+        (obj.units || []).find(
+          u =>
+            u.timer &&
+            u.helper_recurrent === true
+        );
 
+      if (
+        recurringUnit &&
+        helperCooldown > 0
+      ) {
+
+        const remainAfterTrigger =
+          recurringUnit.timer -
+          helperCooldown;
+
+        if (
+          remainAfterTrigger > 0 &&
+          remainAfterTrigger < 7200
+        ) {
+          hallWarnings[hall].helperWaste = true;
+        }
+      }
       (obj.units || []).forEach(unit => {
 
         if (!unit.timer) return;
@@ -856,7 +982,6 @@
 
           depth++;
         }
-
         else if (ch === "}") {
 
           depth--;
@@ -903,198 +1028,23 @@
 
         for (const json of jsonObjects) {
 
-          const obj = JSON.parse(json);
+          try {
 
-          const hall =
-            accountMap[obj.tag];
+            const obj =
+              JSON.parse(json);
 
-          if (!hall)
-            continue;
+            processCOCObject(obj);
 
-          // Xóa dữ liệu COC cũ
-          entries = entries.filter(e =>
-            e.hall !== hall ||
-            ![
-              "builder hall",
-              "lab",
-              "pet",
-              "speed lab",
-              "speed builder hall"
-            ].includes(e.type)
-          );
+            imported++;
 
-          const baseTime =
-            obj.timestamp * 1000;
+          }
+          catch (err) {
 
-          // =====================================
-          // CLOCK TOWER
-          // =====================================
-
-          const clockTower =
-            (obj.buildings2 || [])
-              .find(x => x.data === 1000039);
-
-          const clockCooldown =
-            obj.boosts?.clocktower_cooldown || 0;
-
-          const clockLevel =
-            clockTower?.lvl || 0;
-
-          const clockTowerUpgrading =
-            !!clockTower?.timer;
-
-          const clockReduceMinutes =
-            (clockLevel * 2 + 12) * 9;
-
-          // =====================================
-          // BUILDER HALL
-          // =====================================
-
-          (obj.buildings2 || []).forEach(item => {
-
-            if (!item.timer)
-              return;
-
-            let remaining =
-              item.timer;
-
-            if (
-              !clockTowerUpgrading &&
-              clockCooldown > 0 &&
-              clockReduceMinutes > 0
-            ) {
-
-              let nextCooldown =
-                clockCooldown;
-
-              while (nextCooldown < remaining) {
-
-                const remainAfterTrigger =
-                  remaining - nextCooldown;
-
-                if (remainAfterTrigger < 7200)
-                  break;
-
-                remaining -=
-                  clockReduceMinutes * 60;
-
-                nextCooldown +=
-                  22 * 3600;
-              }
-            }
-
-            addEntry(
-              hall,
-              "builder hall",
-              baseTime + remaining * 1000
-            );
-          });
-
-          // =====================================
-          // LAB
-          // =====================================
-
-          const helperCooldown =
-            obj.helpers?.[0]?.helper_cooldown || 0;
-
-          const helperFinishTime =
-            baseTime +
-            helperCooldown * 1000;
-
-          const hasRecurringHelper =
-            (obj.units || []).some(
-              u =>
-                u.timer &&
-                u.helper_recurrent === true
-            );
-
-          (obj.units || []).forEach(unit => {
-
-            if (!unit.timer)
-              return;
-
-            let remaining =
-              unit.timer;
-
-            if (
-              unit.helper_recurrent === true &&
-              helperCooldown > 0
-            ) {
-
-              let nextCooldown =
-                helperCooldown;
-
-              while (nextCooldown < remaining) {
-
-                const remainAfterTrigger =
-                  remaining - nextCooldown;
-
-                if (remainAfterTrigger < 7200)
-                  break;
-
-                remaining -= 3600;
-
-                nextCooldown +=
-                  24 * 3600;
-              }
-            }
-
-            addEntry(
-              hall,
-              "lab",
-              baseTime + remaining * 1000
-            );
-          });
-
-          // =====================================
-          // PET
-          // =====================================
-
-          (obj.pets || []).forEach(item => {
-
-            if (!item.timer)
-              return;
-
-            addEntry(
-              hall,
-              "pet",
-              baseTime + item.timer * 1000
-            );
-          });
-
-          // =====================================
-          // SPEED LAB
-          // Chỉ hiện khi KHÔNG có
-          // helper_recurrent = true
-          // =====================================
-
-          if (
-            helperCooldown > 0 &&
-            !hasRecurringHelper
-          ) {
-
-            addEntry(
-              hall,
-              "speed lab",
-              helperFinishTime
+            console.error(
+              "JSON lỗi:",
+              err
             );
           }
-
-          // =====================================
-          // SPEED BUILDER HALL
-          // =====================================
-
-          if (clockCooldown > 0) {
-
-            addEntry(
-              hall,
-              "speed builder hall",
-              baseTime +
-              clockCooldown * 1000
-            );
-          }
-
-          imported++;
         }
 
         saveToStorage();
@@ -1105,7 +1055,6 @@
         );
 
       }
-
       catch (e) {
 
         console.error(e);
