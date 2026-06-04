@@ -670,119 +670,129 @@
 
         const baseTime = obj.timestamp * 1000;
 
-        // ==========================
+        // =====================================================
         // CLOCK TOWER
-        // ==========================
+        // =====================================================
 
-        const clockTower =
-          (obj.buildings2 || []).find(
-            b => b.data === 1000039
-          );
+        const clockTower = (obj.buildings2 || [])
+          .find(b => b.data === 1000039);
+
+        const clockCooldown =
+          obj.boosts?.clocktower_cooldown || 0;
 
         const clockLevel =
           clockTower?.lvl || 0;
 
-        const clockCooldown =
-          obj.boosts?.clocktower_cooldown ??
-          Number.MAX_SAFE_INTEGER;
-
-        // Nếu Clock Tower đang nâng cấp
         const clockTowerUpgrading =
           !!clockTower?.timer;
 
-        function applyFutureClockTower(
-          buildTimerSec
-        ) {
+        const clockReduceMinutes =
+          (clockLevel * 2 + 12) * 9;
 
-          // Không có Clock Tower
-          if (!clockLevel) {
-            return buildTimerSec;
-          }
-
-          // Clock Tower đang nâng cấp
-          if (clockTowerUpgrading) {
-            return buildTimerSec;
-          }
-
-          const boostSec =
-            ((clockLevel * 2 + 12) * 9) * 60;
-
-          let remaining = buildTimerSec;
-          let nextBoost = clockCooldown;
-
-          while (nextBoost < remaining) {
-
-            remaining -= boostSec;
-
-            if (remaining <= 0) {
-              return 0;
-            }
-
-            nextBoost += 22 * 3600;
-          }
-
-          return remaining;
-        }
-
-        // ==========================
-        // BUILDER BASE
-        // ==========================
+        // =====================================================
+        // BUILDER HALL
+        // =====================================================
 
         (obj.buildings2 || []).forEach(item => {
 
           if (!item.timer) return;
 
-          let predictedTimer = item.timer;
+          let remaining = item.timer;
 
-          // Không áp dụng cho chính Clock Tower
-          if (item.data !== 1000039) {
+          // Chỉ dự đoán nếu Clock Tower KHÔNG nâng cấp
+          if (
+            !clockTowerUpgrading &&
+            clockCooldown > 0 &&
+            clockReduceMinutes > 0
+          ) {
 
-            predictedTimer =
-              applyFutureClockTower(
-                item.timer
-              );
+            let nextCooldown =
+              clockCooldown;
 
+            while (nextCooldown < remaining) {
+
+              const remainAfterTrigger =
+                remaining - nextCooldown;
+
+              // Không dùng nếu còn dưới 2h
+              if (remainAfterTrigger < 7200)
+                break;
+
+              remaining -=
+                clockReduceMinutes * 60;
+
+              nextCooldown +=
+                22 * 3600;
+            }
           }
 
           addEntry(
             hall,
             "builder hall",
-            baseTime +
-            predictedTimer * 1000
+            baseTime + remaining * 1000
           );
-
         });
 
-        // ==========================
+        // =====================================================
         // LAB
-        // ==========================
+        // =====================================================
 
-        (obj.units || []).forEach(item => {
+        const helperCooldown =
+          obj.helpers?.[0]?.helper_cooldown || 0;
 
-          if (!item.timer) return;
+        const helperFinishTime =
+          baseTime +
+          helperCooldown * 1000;
 
-          const helperCooldown =
-            obj.helpers?.[0]?.helper_cooldown ??
-            Number.MAX_SAFE_INTEGER;
+        const hasRecurringHelper =
+          (obj.units || []).some(
+            u =>
+              u.timer &&
+              u.helper_recurrent === true
+          );
 
-          const predictedLabTimer =
-            applyFutureResearchAssistant(
-              item.timer,
-              helperCooldown
-            );
+        (obj.units || []).forEach(unit => {
+
+          if (!unit.timer) return;
+
+          let remaining =
+            unit.timer;
+
+          // Apprentice Researcher auto chạy
+          if (
+            unit.helper_recurrent === true &&
+            helperCooldown > 0
+          ) {
+
+            let nextCooldown =
+              helperCooldown;
+
+            while (nextCooldown < remaining) {
+
+              const remainAfterTrigger =
+                remaining - nextCooldown;
+
+              // tránh lãng phí
+              if (remainAfterTrigger < 7200)
+                break;
+
+              remaining -= 3600;
+
+              nextCooldown +=
+                24 * 3600;
+            }
+          }
 
           addEntry(
             hall,
             "lab",
-            baseTime +
-            predictedLabTimer * 1000
+            baseTime + remaining * 1000
           );
-
         });
 
-        // ==========================
+        // =====================================================
         // PET
-        // ==========================
+        // =====================================================
 
         (obj.pets || []).forEach(item => {
 
@@ -791,42 +801,39 @@
           addEntry(
             hall,
             "pet",
-            baseTime +
-            item.timer * 1000
+            baseTime + item.timer * 1000
           );
-
         });
 
-        // ==========================
+        // =====================================================
         // SPEED LAB
-        // ==========================
+        // Chỉ hiện nếu helper KHÔNG auto chạy
+        // =====================================================
 
-        (obj.helpers || []).forEach(item => {
-
-          if (!item.helper_cooldown) return;
+        if (
+          helperCooldown > 0 &&
+          !hasRecurringHelper
+        ) {
 
           addEntry(
             hall,
             "speed lab",
-            baseTime +
-            item.helper_cooldown * 1000
+            helperFinishTime
           );
+        }
 
-        });
-
-        // ==========================
+        // =====================================================
         // SPEED BUILDER HALL
-        // ==========================
+        // =====================================================
 
-        if (obj.boosts?.clocktower_cooldown) {
+        if (clockCooldown > 0) {
 
           addEntry(
             hall,
             "speed builder hall",
             baseTime +
-            obj.boosts.clocktower_cooldown * 1000
+            clockCooldown * 1000
           );
-
         }
 
         saveToStorage();
@@ -839,13 +846,12 @@
       }
       catch (e) {
 
+        console.error(e);
+
         alert(
           "JSON lỗi:\n" +
           e.message
         );
-
-        console.error(e);
-
       }
     }
   </script>
