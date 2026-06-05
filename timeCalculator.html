@@ -233,17 +233,24 @@
         return false;
       }
 
-      return (obj.units || []).some(unit => {
+      const researches = [
+        ...(obj.units || []),
+        ...(obj.spells || []),
+        ...(obj.siege_machines || [])
+      ];
+
+      return researches.some(item => {
 
         if (
-          !unit.timer ||
-          unit.helper_recurrent !== true
+          !item.timer ||
+          item.helper_recurrent !== true
         ) {
           return false;
         }
 
         const remainAfterTrigger =
-          unit.timer - helperCooldown;
+          item.timer -
+          helperCooldown;
 
         return (
           remainAfterTrigger > 0 &&
@@ -835,7 +842,7 @@
       });
 
       // =====================================================
-      // LAB
+      // LAB (units + spells + siege_machines)
       // =====================================================
 
       const helperCooldown =
@@ -845,26 +852,34 @@
         baseTime +
         helperCooldown * 1000;
 
+      const labResearches = [
+        ...(obj.units || []),
+        ...(obj.spells || []),
+        ...(obj.siege_machines || [])
+      ];
+
       const hasRecurringHelper =
-        (obj.units || []).some(
-          u =>
-            u.timer &&
-            u.helper_recurrent === true
-        );
-      const recurringUnit =
-        (obj.units || []).find(
-          u =>
-            u.timer &&
-            u.helper_recurrent === true
+        labResearches.some(
+          item =>
+            item.timer &&
+            item.helper_recurrent === true
         );
 
+      const recurringResearch =
+        labResearches.find(
+          item =>
+            item.timer &&
+            item.helper_recurrent === true
+        );
+
+      // Cảnh báo Apprentice Researcher sắp bị lãng phí
       if (
-        recurringUnit &&
+        recurringResearch &&
         helperCooldown > 0
       ) {
 
         const remainAfterTrigger =
-          recurringUnit.timer -
+          recurringResearch.timer -
           helperCooldown;
 
         if (
@@ -874,15 +889,17 @@
           hallWarnings[hall].helperWaste = true;
         }
       }
-      (obj.units || []).forEach(unit => {
 
-        if (!unit.timer) return;
+      labResearches.forEach(item => {
+
+        if (!item.timer) return;
 
         let remaining =
-          unit.timer;
+          item.timer;
 
+        // Apprentice Researcher auto chạy
         if (
-          unit.helper_recurrent === true &&
+          item.helper_recurrent === true &&
           helperCooldown > 0
         ) {
 
@@ -897,6 +914,7 @@
               remaining -
               nextCooldown;
 
+            // tránh lãng phí
             if (
               remainAfterTrigger < 7200
             ) {
@@ -919,23 +937,9 @@
       });
 
       // =====================================================
-      // PET
-      // =====================================================
-
-      (obj.pets || []).forEach(item => {
-
-        if (!item.timer) return;
-
-        addEntry(
-          hall,
-          "pet",
-          baseTime +
-          item.timer * 1000
-        );
-      });
-
-      // =====================================================
       // SPEED LAB
+      // Chỉ hiện nếu không có research nào
+      // đang bật helper_recurrent
       // =====================================================
 
       if (
