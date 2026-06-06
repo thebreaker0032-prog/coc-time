@@ -5,7 +5,6 @@
 <title>COC Time Export</title>
 </head>
 <body>
-
 <textarea id="input"></textarea>
 <textarea id="output"></textarea>
 
@@ -143,78 +142,10 @@ function exportTime() {
                 obj.buildings,
                 timestamp,
                 timeResult
-            );
-
-            // ===== timeDiff =====
-
-            const timeDiff = [];
-
-            // helper cooldown
-            (obj.helpers || []).forEach(h => {
-
-                if (h.helper_cooldown) {
-
-                    timeDiff.push(
-                        String(
-                            (timestamp + h.helper_cooldown) * 1000
-                        )
-                    );
-                }
-            });
-
-            // spell timer
-            (obj.spells || []).forEach(s => {
-
-                if (s.timer) {
-
-                    timeDiff.push(
-                        String(
-                            (timestamp + s.timer) * 1000
-                        )
-                    );
-                }
-            });
-
-            // builder base timer
-            (obj.buildings2 || []).forEach(b => {
-
-                if (b.timer) {
-
-                    timeDiff.push(
-                        String(
-                            (timestamp + b.timer) * 1000
-                        )
-                    );
-                }
-            });
-
-            // clock tower cooldown
-            if (
-                obj.boosts &&
-                obj.boosts.clocktower_cooldown
-            ) {
-
-                timeDiff.push(
-                    String(
-                        (
-                            timestamp +
-                            obj.boosts.clocktower_cooldown
-                        ) * 1000
-                    )
-                );
-            }
-
-            // sort tăng dần
-            timeDiff.sort(
-                (a, b) => Number(a) - Number(b)
-            );
+            );           
 
             outputs.push(
                 `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeResult)})`
-            );
-
-            outputs.push(
-                `accountBuildList[${accountId}].put("timeDiff", ${JSON.stringify(timeDiff)})`
             );
 
             outputs.push("");
