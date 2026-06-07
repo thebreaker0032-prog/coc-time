@@ -795,51 +795,48 @@
       // BUILDER HALL
       // =====================================================
 
-      (obj.buildings2 || []).forEach(item => {
+const builderTimers = [
+  ...(obj.buildings2 || []),
+  ...(obj.heroes2 || [])
+];
 
-        if (!item.timer) return;
+builderTimers.forEach(item => {
 
-        let remaining =
-          item.timer;
+  if (!item.timer) return;
 
-        if (
-          !clockTowerUpgrading &&
-          clockCooldown > 0 &&
-          clockReduceMinutes > 0
-        ) {
+  let remaining = item.timer;
 
-          let nextCooldown =
-            clockCooldown;
+  if (
+    !clockTowerUpgrading &&
+    clockCooldown > 0 &&
+    clockReduceMinutes > 0
+  ) {
 
-          while (
-            nextCooldown < remaining
-          ) {
+    let nextCooldown = clockCooldown;
 
-            const remainAfterTrigger =
-              remaining -
-              nextCooldown;
+    while (nextCooldown < remaining) {
 
-            if (
-              remainAfterTrigger < 7200
-            ) {
-              break;
-            }
+      const remainAfterTrigger =
+        remaining - nextCooldown;
 
-            remaining -=
-              clockReduceMinutes * 60;
+      if (remainAfterTrigger < 7200) {
+        break;
+      }
 
-            nextCooldown +=
-              22 * 3600;
-          }
-        }
+      remaining -=
+        clockReduceMinutes * 60;
 
-        addEntry(
-          hall,
-          "builder hall",
-          baseTime +
-          remaining * 1000
-        );
-      });
+      nextCooldown +=
+        22 * 3600;
+    }
+  }
+
+  addEntry(
+    hall,
+    "builder hall",
+    baseTime + remaining * 1000
+  );
+});
 
       // =====================================================
       // LAB (units + spells + siege_machines)
