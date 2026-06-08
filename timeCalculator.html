@@ -827,7 +827,8 @@ builderTimers.forEach(item => {
         clockReduceMinutes * 60;
 
       nextCooldown +=
-        22 * 3600;
+  22 * 3600 +
+  (12 + clockLevel * 2) * 60;
     }
   }
 
