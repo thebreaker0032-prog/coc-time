@@ -143,6 +143,34 @@ function addBuildingLevels(arr, map) {
     });
 }
 
+function addTimers(
+    arr,
+    timestamp,
+    result
+) {
+
+    if (!Array.isArray(arr)) return;
+
+    arr.forEach(item => {
+
+        if (!item.timer) return;
+
+        const name =
+            buildingMap[item.data];
+
+        if (!name) return;
+
+        result.push([
+            name,
+            String(
+                (timestamp + item.timer)
+                * 1000
+            ),
+            (item.lvl || 0) + 1
+        ]);
+    });
+}
+
 function exportTime() {
 
     try {
@@ -226,5 +254,7 @@ function exportTime() {
 }
 
 </script>
+
+        
 </body>
 </html>
