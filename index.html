@@ -43,8 +43,10 @@ const buildingMap = {
     1000070:"acksm",
     1000071:"hero",
     1000072:"ellt",
-    1000077:"nol"
+    1000077:"nol",
+    1000093:"der"
 };
+
 const accountMap = {
     "#R0V0P2QRL": 0,
     "#GCL0UCPYU": 1,
@@ -57,7 +59,79 @@ const accountMap = {
     "#GG99VJGRP": 8,
     "#R28Q9L9PP": 9
 };
-function addTimers(arr, timestamp, result) {
+
+function splitObjects(text) {
+
+    const result = [];
+
+    let depth = 0;
+    let start = -1;
+
+    for (let i = 0; i < text.length; i++) {
+
+        if (text[i] === "{") {
+
+            if (depth === 0) {
+                start = i;
+            }
+
+            depth++;
+        }
+
+        else if (text[i] === "}") {
+
+            depth--;
+
+            if (depth === 0 && start !== -1) {
+
+                result.push(
+                    text.substring(start, i + 1)
+                );
+            }
+        }
+    }
+
+    return result;
+}
+
+function addBuildingLevels(arr, map) {
+
+    if (!Array.isArray(arr)) return;
+
+    arr.forEach(item => {
+
+        const name =
+            buildingMap[item.data];
+
+        if (!name) return;
+
+        if (item.data === 1000001) {
+
+            map[name] = item.lvl;
+            return;
+        }
+
+        if (!item.cnt) return;
+
+        if (!map[name]) {
+            map[name] = [];
+        }
+
+        for (
+            let i = 0;
+            i < item.cnt;
+            i++
+        ) {
+            map[name].push(item.lvl);
+        }
+    });
+}
+
+function addTimers(
+    arr,
+    timestamp,
+    result
+) {
 
     if (!Array.isArray(arr)) return;
 
@@ -65,13 +139,17 @@ function addTimers(arr, timestamp, result) {
 
         if (!item.timer) return;
 
-        const name = buildingMap[item.data];
+        const name =
+            buildingMap[item.data];
 
         if (!name) return;
 
         result.push([
             name,
-            String((timestamp + item.timer) * 1000),
+            String(
+                (timestamp + item.timer)
+                * 1000
+            ),
             (item.lvl || 0) + 1
         ]);
     });
@@ -81,83 +159,81 @@ function exportTime() {
 
     try {
 
-        const input = document
+        const input =
+            document
             .getElementById("input")
             .value
             .trim();
 
-        const objects = [];
-
-        let depth = 0;
-        let start = -1;
-
-        for (let i = 0; i < input.length; i++) {
-
-            if (input[i] === "{") {
-
-                if (depth === 0) {
-                    start = i;
-                }
-
-                depth++;
-            }
-
-            if (input[i] === "}") {
-
-                depth--;
-
-                if (depth === 0) {
-
-                    objects.push(
-                        input.substring(start, i + 1)
-                    );
-                }
-            }
-        }
+        const objects =
+            splitObjects(input);
 
         const outputs = [];
 
-        objects.forEach((jsonText) => {
+        objects.forEach(text => {
 
-            const obj = JSON.parse(jsonText);
+            const obj =
+                JSON.parse(text);
 
-            const accountId = accountMap[obj.tag];
+            const accountId =
+                accountMap[obj.tag];
 
-            if (accountId == null) {
+            if (
+                accountId === undefined
+            ) {
 
                 outputs.push(
-                    `// Không tìm thấy accountMap cho tag ${obj.tag}`
+                    `// Không tìm thấy account ${obj.tag}`
                 );
 
                 return;
             }
 
-            const timestamp = obj.timestamp;
+            const buildMap = {};
+            const timeList = [];
 
-            // ===== time =====
-
-            const timeResult = [];
+            addBuildingLevels(
+                obj.buildings,
+                buildMap
+            );
 
             addTimers(
                 obj.buildings,
-                timestamp,
-                timeResult
-            );           
+                obj.timestamp,
+                timeList
+            );
+
+            Object.entries(buildMap)
+            .forEach(
+                ([key, value]) => {
+
+                    outputs.push(
+                        `accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`
+                    );
+                }
+            );
 
             outputs.push(
-                `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeResult)})`
+                `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`
             );
 
             outputs.push("");
         });
 
-        document.getElementById("output").value =
+        document
+        .getElementById("output")
+        .value =
             outputs.join("\n");
 
-    } catch (e) {
+    }
 
-        document.getElementById("output").value =
-            "JSON lỗi:\n" + e.message;
+    catch (e) {
+
+        document
+        .getElementById("output")
+        .value =
+            "JSON lỗi:\n" +
+            e.message;
     }
 }
 
