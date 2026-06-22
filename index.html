@@ -105,53 +105,41 @@ function addBuildingLevels(arr, map) {
 
         if (!name) return;
 
+        // Town Hall
         if (item.data === 1000001) {
 
             map[name] = item.lvl;
             return;
         }
 
-        if (!item.cnt) return;
+        // Có cnt
+        if (item.cnt != null) {
 
-        if (!map[name]) {
+            if (!map[name]) {
+                map[name] = [];
+            }
+
+            for (
+                let i = 0;
+                i < item.cnt;
+                i++
+            ) {
+                map[name].push(
+                    item.lvl || 0
+                );
+            }
+
+            return;
+        }
+
+        // Không có cnt
+        // chỉ tạo [] nếu lvl > 0
+        if (
+            item.lvl > 0 &&
+            map[name] === undefined
+        ) {
             map[name] = [];
         }
-
-        for (
-            let i = 0;
-            i < item.cnt;
-            i++
-        ) {
-            map[name].push(item.lvl);
-        }
-    });
-}
-
-function addTimers(
-    arr,
-    timestamp,
-    result
-) {
-
-    if (!Array.isArray(arr)) return;
-
-    arr.forEach(item => {
-
-        if (!item.timer) return;
-
-        const name =
-            buildingMap[item.data];
-
-        if (!name) return;
-
-        result.push([
-            name,
-            String(
-                (timestamp + item.timer)
-                * 1000
-            ),
-            (item.lvl || 0) + 1
-        ]);
     });
 }
 
