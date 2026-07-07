@@ -93,6 +93,41 @@ function splitObjects(text) {
 
     return result;
 }
+const maxLevelByTH = {
+    clan:[0,0,1,1,2,2,3,3,4,5,6,7,8,9,10,11,12,13,14],
+    army:[0,1,2,3,4,5,6,6,6,7,8,9,10,11,11,12,12,12,12],
+    barr:[0,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,18,19],
+    lab:[0,0,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+    fac:[0,0,0,0,0,1,2,3,3,4,5,6,6,7,7,8,8,8,9],
+    darkbarr:[0,0,0,0,0,0,0,2,4,6,7,8,9,10,11,12,12,12,12],
+    hero:[0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,10,11,12],
+    darkspell:[0,0,0,0,0,0,0,0,2,4,5,5,6,6,7,7,7,7,7],
+    acksm:[0,0,0,0,0,0,0,0,1,2,3,4,5,6,7,8,9,9,9],
+    rks:[0,0,0,0,0,0,0,0,0,0,0,0,3,5,6,7,8,8,8],
+    eth:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,8,10,11,12],
+    can:[0,2,3,4,5,6,7,8,10,11,13,15,17,19,20,21,21,21],
+    rto:[0,0,2,3,4,6,7,8,10,11,13,15,17,19,20,21,21,21,21],
+    mor:[0,0,0,1,2,3,4,5,6,7,8,10,12,13,14,15,16,17,18],
+    rde:[0,0,0,0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+    rdt:[0,0,0,0,0,2,3,4,6,7,9,10,11,13,14,15,16,17,17],
+    rsw:[0,0,0,0,0,0,2,3,4,5,6,7,7,7,7,7,7,7,7],
+    nte:[0,0,0,0,0,0,0,3,6,7,8,9,10,12,13,14,15,16,17],
+    bto:[0,0,0,0,0,0,0,0,2,3,4,6,7,8,9,10,11,12,13],
+    bow:[0,0,0,0,0,0,0,0,0,3,4,5,6,8,9,10,11,12,12],
+    fer:[0,0,0,0,0,0,0,0,0,0,3,5,6,7,8,9,10,11,12],
+    gle:[0,0,0,0,0,0,0,0,0,0,0,2,3,4,5,6,7],
+    ter:[0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,4,5,6,6],
+    der:[0,1,1,1,1,1,1,1,1,1,1,1,1,1,4,5,6,7,7],
+    ellt:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,4,4],
+    nol:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,4,4],
+    mul:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,4],
+    ric:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,3,4]
+};
+
+const upgradeTarget = {
+    can:4,
+    rto:4,
+};
 
 function addBuildingLevels(arr, map) {
 
@@ -170,7 +205,58 @@ function addTimers(
         ]);
     });
 }
+function addUpgradeList(buildMap) {
 
+    const th = buildMap.town || 1;
+
+    const upgradeList = [];
+
+    Object.entries(upgradeTarget).forEach(([name, count]) => {
+
+        const levels = buildMap[name];
+
+        if (!Array.isArray(levels)) {
+            return;
+        }
+
+        const table = maxLevelByTH[name];
+
+        if (!table) {
+            return;
+        }
+
+        const maxLevel =
+            table[Math.min(th, table.length - 1)];
+
+        if (maxLevel <= 0) {
+            return;
+        }
+
+        // Chỉ lấy các công trình CHƯA MAX
+        const selectLevels = [...levels]
+            .filter(level => level < maxLevel)
+            .sort((a, b) => b - a)
+            .slice(0, count);
+
+        selectLevels.forEach(level => {
+
+            for (
+                let lv = level + 1;
+                lv <= maxLevel;
+                lv++
+            ) {
+
+                upgradeList.push(
+                    `${name}-${lv}`
+                );
+            }
+
+        });
+
+    });
+
+    buildMap.upgrade = upgradeList;
+}
 function exportTime() {
 
     try {
