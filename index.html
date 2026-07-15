@@ -44,7 +44,13 @@ const buildingMap = {
     1000071:"hero",
     1000072:"ellt",
     1000077:"nol",
-    1000093:"der"
+    1000093:"der",
+    28000000: "king",
+    28000001: "queen",
+    28000002: "grand",
+    28000004: "champ",
+    28000006: "prin",
+    28000007: "duke"
 };
 
 const accountMap = {
@@ -298,13 +304,20 @@ function exportTime() {
                 obj.buildings,
                 buildMap
             );
-
+            addBuildingLevels(
+                obj.heroes,
+                buildMap
+            );
             addTimers(
                 obj.buildings,
                 obj.timestamp,
                 timeList
             );
-
+            addTimers(
+                obj.heroes,
+                obj.timestamp,
+                timeList
+            );
             Object.entries(buildMap)
             .forEach(
                 ([key, value]) => {
