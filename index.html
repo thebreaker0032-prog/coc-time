@@ -175,17 +175,16 @@ function addBuildingLevels(arr, map) {
 
         // Không có cnt
         // chỉ tạo [] nếu lvl > 0
-        const heroIds = [
-    28000000,
-    28000001,
-    28000002,
-    28000004,
-    28000006,
-    28000007
-];
-
-if (heroIds.includes(item.data)) {
-    map[name] = [item.lvl] || [];
+        // Hero
+if (
+    item.data >= 28000000 &&
+    item.data <= 28000007
+) {
+    if (item.timer) {
+        map[name] = [];
+    } else {
+        map[name] = [item.lvl || 0];
+    }
     return;
 }
     });
