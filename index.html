@@ -185,7 +185,7 @@ function addBuildingLevels(arr, map) {
 ];
 
 if (heroIds.includes(item.data)) {
-    map[name] = item.lvl || 0;
+    map[name] = [item.lvl] || [];
     return;
 }
     });
