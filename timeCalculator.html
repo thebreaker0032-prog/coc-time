@@ -3,143 +3,147 @@
 <!--  -->
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Thời Gian Đến</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 12px;
-      background: #1e1e1e;
-      color: #e0e0e0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thời Gian Đến</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.19.3/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 12px;
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
 
-    h2 {
-      font-size: 20px;
-      text-align: center;
-      color: #fff;
-      margin-bottom: 10px;
-    }
+        h2 {
+            font-size: 20px;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+        }
 
-    input,
-    select,
-    button {
-      font-size: 18px;
-      padding: 10px 12px;
-      margin: 4px;
-      background-color: #2d2d2d;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 6px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+        input,
+        select,
+        button {
+            font-size: 18px;
+            padding: 10px 12px;
+            margin: 4px;
+            background-color: #2d2d2d;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
 
-    .action-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-around;
-      gap: 8px;
-      margin: 10px 0;
-    }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 8px;
+            margin: 10px 0;
+        }
 
-    .action-buttons button {
-      flex: 1;
-      min-width: 90px;
-      background: #3a3a3a;
-      transition: background 0.2s;
-    }
+        .action-buttons button {
+            flex: 1;
+            min-width: 90px;
+            background: #3a3a3a;
+            transition: background 0.2s;
+        }
 
-    .action-buttons button:hover {
-      background: #555;
-    }
+        .action-buttons button:hover {
+            background: #555;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #2a2a2a;
-      font-size: 16px;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #2a2a2a;
+            font-size: 16px;
+        }
 
-    th,
-    td {
-      border: 1px solid #444;
-      padding: 8px;
-      text-align: center;
-    }
+        th,
+        td {
+            border: 1px solid #444;
+            padding: 8px;
+            text-align: center;
+        }
 
-    th {
-      background-color: #333;
-      font-weight: bold;
-    }
+        th {
+            background-color: #333;
+            font-weight: bold;
+        }
 
-    tr:nth-child(even) {
-      background-color: #242424;
-    }
+        tr:nth-child(even) {
+            background-color: #242424;
+        }
 
-    .remove-btn {
-      background: #444;
-      color: #eee;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      padding: 4px 6px;
-    }
+        .remove-btn {
+            background: #444;
+            color: #eee;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            padding: 4px 6px;
+        }
 
-    .table-container {
-      overflow-x: auto;
-      max-height: 60vh;
-    }
+        .table-container {
+            overflow-x: auto;
+            max-height: 60vh;
+        }
 
-    .bottom-buttons {
-      margin-top: 12px;
-      display: flex;
-      justify-content: center;
-    }
+        .bottom-buttons {
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+        }
 
-    @media print {
-      body {
-        background: white;
-        color: black;
-      }
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
 
-      .action-buttons,
-      .bottom-buttons,
-      input,
-      select,
-      #addBtn {
-        display: none;
-      }
-    }
+            .action-buttons,
+            .bottom-buttons,
+            input,
+            select,
+            #addBtn {
+                display: none;
+            }
+        }
 
-    .reuse-btn {
-      background-color: #3a3a3a;
-      color: #fff;
-      border: 1px solid #555;
-      border-radius: 5px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+        .reuse-btn {
+            background-color: #3a3a3a;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
 
-    .reuse-btn:hover {
-      background-color: #555;
-    }
-  </style>
+        .reuse-btn:hover {
+            background-color: #555;
+        }
+
+        #filterSelect {
+            font-family: Consolas, "Courier New", monospace;
+        }
+    </style>
 </head>
 
 <body>
 
-  <h2>⏱️ Tính thời gian đến</h2>
-  <textarea id="cocInput" style="
+    <h2>⏱️ Tính thời gian đến</h2>
+    <textarea id="cocInput" style="
     width:100%;
     height:180px;
     background:#2d2d2d;
@@ -148,379 +152,217 @@
   " placeholder="Paste JSON Clash of Clans vào đây">
 </textarea>
 
-  <button onclick="importCOC()">
-    Import Clash Of Clans
-  </button>
-  <div class="input-group">
-    <input id="timeInput" type="number" placeholder="Nhập phút hoặc giờ+phút (vd: 45 hoặc 130)" inputmode="numeric">
-    <select id="hallSelect"></select>
-    <select id="typeSelect">
-      <option value="lab">lab</option>
-      <option value="pet">pet</option>
-      <option value="speed lab">speed lab</option>
-      <option value="builder hall">builder hall</option>
-      <option value="speed builder hall">speed builder hall</option>
-      <option value="builder hall x10">thợ xây x10</option>
-      <option value="builder hall x2">thợ xây x2</option>
-      <option value="lab x24">nghiên cứu x24</option>
-      <option value="lab x4">nghiên cứu x4</option>
-      <option value="normal">normal</option>
-    </select>
-    <button id="addBtn">➕ Thêm ⏱️</button>
-  </div>
+    <button onclick="importCOC()">
+        Import Clash Of Clans
+    </button>
+    <div class="input-group">
+        <input id="timeInput" type="number" placeholder="Nhập phút hoặc giờ+phút (vd: 45 hoặc 130)" inputmode="numeric">
+        <select id="hallSelect"></select>
+        <select id="typeSelect">
+            <option value="lab">lab</option>
+            <option value="pet">pet</option>
+            <option value="speed lab">speed lab</option>
+            <option value="builder hall">builder hall</option>
+            <option value="speed builder hall">speed builder hall</option>
+            <option value="normal">normal</option>
+        </select>
+        <button id="addBtn">➕ Thêm ⏱️</button>
+    </div>
 
-  <div class="action-buttons">
-    <select id="filterSelect">
-      <option value="">🔍 Tất cả Hall</option>
-    </select>
-    <button id="loadGitHubBtn">Load</button>
-    <button id="uploadGitHubBtn">Save</button>
-    <button id="resetTokenBtn">Reset</button>
-  </div>
+    <div class="action-buttons">
+        <select id="filterSelect">
+            <option value="">🔍 Tất cả Hall</option>
+        </select>
+        <button id="loadGitHubBtn">Load</button>
+        <button id="uploadGitHubBtn">Save</button>
+        <button id="resetTokenBtn">Reset</button>
+    </div>
 
-  <div class="table-container">
-    <table id="resultTable">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Ngày đến</th>
-          <th>Giờ đến</th>
-          <th>Hall</th>
-          <th>Loại</th>
-          <th>Tổng phút</th>
-          <th>Hành động</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+    <div class="table-container">
+        <table id="resultTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Ngày đến</th>
+                    <th>Giờ đến</th>
+                    <th>Hall</th>
+                    <th>Loại</th>
+                    <th>Tổng phút</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
 
-  <script>
-    const input = document.getElementById('timeInput');
-    const hallSelect = document.getElementById('hallSelect');
-    const typeSelect = document.getElementById('typeSelect');
-    const tableBody = document.querySelector('#resultTable tbody');
-    const filterSelect = document.getElementById('filterSelect');
-    let entries = [];
-    const STORAGE_KEY = "time_entries_v3";
-    const accountMap = {
-      "#R0V0P2QRL": "1",
-      "#GCL0UCPYU": "2",
-      "#R9RRYVJLY": "3",
-      "#GUC8YLLCQ": "4",
-      "#GG99VG02P": "5",
-      "#GQQQ2QR02": "6",
-      "#R28PGJR2Q": "7",
-      "#R9RRL98JV": "8",
-      "#GG99VJGRP": "9",
-      "#R28Q9L9PP": "10"
-    };
-    const halls = [
-      { name: "1" }, { name: "2" }, { name: "3" },
-      { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" },
-      { name: "9" }, { name: "10" }
-    ];
-    const hallWarnings = {};
-    const warningHalls = new Set();
-    hallSelect.innerHTML =
-      halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
-    function hasLabWasteWarning(obj) {
+    <script>
+        const input = document.getElementById('timeInput');
+        const hallSelect = document.getElementById('hallSelect');
+        const typeSelect = document.getElementById('typeSelect');
+        const tableBody = document.querySelector('#resultTable tbody');
+        const filterSelect = document.getElementById('filterSelect');
+        let entries = [];
+        const STORAGE_KEY = "time_entries_v3";
+        const accountMap = { "#R0V0P2QRL": "1", "#GCL0UCPYU": "2", "#R9RRYVJLY": "3", "#GUC8YLLCQ": "4", "#GG99VG02P": "5", "#GQQQ2QR02": "6", "#R28PGJR2Q": "7", "#R9RRL98JV": "8", "#GG99VJGRP": "9", "#R28Q9L9PP": "10" };
+        const halls = [{ name: "1" }, { name: "2" }, { name: "3" }, { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" }, { name: "9" }, { name: "10" }];
+        const hallWarnings = {};
+        const warningHalls = new Set();
+        hallSelect.innerHTML = halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        function hasLabWasteWarning(obj) {
+            const helperCooldown = obj.helpers?.[0]?.helper_cooldown || 0;
+            if (!helperCooldown) return false;
+            const researches = [...(obj.units || []), ...(obj.spells || []), ...(obj.siege_machines || [])];
+            return researches.some(item => {
+                if (!item.timer || item.helper_recurrent !== true) return false;
+                const remainAfterTrigger = item.timer - helperCooldown;
+                return (remainAfterTrigger > 0 && remainAfterTrigger < 7200);
+            });
+        }
+        function pad(n) {
+            return String(n).padStart(2, " ");
+        }
+        function apply24xBoost(timer, boostSeconds) {
+            if (boostSeconds <= 0) return timer;
+            const boosted = boostSeconds * 24;
+            // Boost đủ để hoàn thành
+            if (boosted >= timer) {
+                return Math.ceil(timer / 24);
+            }
+            // Boost hết trước
+            return boostSeconds + (timer - boosted);
+        }
+        function updateFilterWarnings() {
+            const now = Date.now();
+            const currentValue = filterSelect.value;
+            filterSelect.innerHTML = `<option value="">🔍 Tất cả Hall</option>` +
+                halls.map(h => {
+                    const hallEntries = entries.filter(e => e.hall === h.name && e.timestamp > now);
+                    const builderCount = hallEntries.filter(e => e.type === "builder hall").length;
+                    const labCount = hallEntries.filter(e => e.type === "lab").length;
+                    const speedBuilderCount = hallEntries.filter(e => e.type === "speed builder hall").length;
+                    const speedLabCount = hallEntries.filter(e => e.type === "speed lab").length;
+                    const petCount = hallEntries.filter(e => e.type === "pet").length;
+                    let text = `${h.name.padStart(9, " ")} | `;
+                    if (builderCount) text += `🔨${pad(builderCount)} | `;
+                    if (labCount) text += `🧪${pad(labCount)} | `;
+                    if (petCount) text += ` 🐾${pad(petCount)} | `;
+                    if (speedBuilderCount) text += `⚡${pad(speedBuilderCount)} | `;
+                    if (speedLabCount) text += `🚀${pad(speedLabCount)}`;
+                    if (hallWarnings && hallWarnings[h.name]?.helperWaste) text += " 🚨";
+                    return `<option value="${h.name}">${text}</option>`;
+                }).join("");
+            filterSelect.value = currentValue;
+        }
+        filterSelect.innerHTML = `<option value="">🔍 Tất cả Hall</option>` + halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        }
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                entries = JSON.parse(saved);
+                renderTable();
+            }
+        }
+        function addEntry(hall, type, timestamp) {
+            const d = new Date(timestamp);
+            entries.push({
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                timestamp,
+                dateString: d.toLocaleDateString("vi-VN"),
+                hh: d.getHours().toString().padStart(2, "0"),
+                mm: d.getMinutes().toString().padStart(2, "0"),
+                hall,
+                type
+            });
+        }
+        function parseTimeInput(value) {
+            const val = value.trim();
+            if (!/^\d{1,6}$/.test(val)) return 0;
+            if (val.length <= 2) return parseInt(val, 10);
+            if (val.length <= 4) {
+                const padded = val.padStart(4, '0');
+                const h = parseInt(padded.slice(0, -2), 10);
+                const m = parseInt(padded.slice(-2), 10);
+                return h * 60 + m;
+            }
+            const padded = val.padStart(6, '0');
+            const d = parseInt(padded.slice(0, -4), 10);
+            const h = parseInt(padded.slice(-4, -2), 10);
+            const m = parseInt(padded.slice(-2), 10);
+            return d * 24 * 60 + h * 60 + m;
+        }
+        function formatTimeRemaining(entry) {
+            const diffMs = entry.timestamp - Date.now();
+            if (diffMs <= 0) return "⏰ 00:00";
+            let totalMinutes = Math.floor(diffMs / 60000);
+            const days = Math.floor(totalMinutes / (24 * 60));
+            totalMinutes %= 24 * 60;
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            if (days > 0) return `${days}:${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
+        function handleInput() {
+            const value = input.value.trim();
+            const hall = hallSelect.value;
+            const type = typeSelect.value;
+            if (!/^\d{1,6}$/.test(value)) {
+                input.value = '';
+                input.focus();
+                return;
+            }
+            // === Phần thêm thời gian bình thường ===
+            const now = new Date();
+            const totalMinutes = parseTimeInput(value);
+            const future = new Date(now.getTime() + totalMinutes * 60000);
 
-      const helperCooldown =
-        obj.helpers?.[0]?.helper_cooldown || 0;
+            const entry = {
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+                timestamp: future.getTime(),
+                dateString: future.toLocaleDateString('vi-VN'),
+                hh: future.getHours().toString().padStart(2, '0'),
+                mm: future.getMinutes().toString().padStart(2, '0'),
+                type,
+                hall
+            };
 
-      if (!helperCooldown) {
-        return false;
-      }
+            const twoMinutes = 2 * 60000;
+            const tooClose = entries.some(e => e.hall === entry.hall && Math.abs(e.timestamp - entry.timestamp) <= twoMinutes);
+            if (tooClose) return;
 
-      const researches = [
-        ...(obj.units || []),
-        ...(obj.spells || []),
-        		...(obj.siege_machines || []),
-	...(obj.pets || [])
-      ];
+            entries.push(entry);
+            saveToStorage();
+            renderTable();
 
-      return researches.some(item => {
-
-        if (
-          !item.timer ||
-          item.helper_recurrent !== true
-        ) {
-          return false;
+            input.value = '';
+            input.focus();
         }
 
-        const remainAfterTrigger =
-          item.timer -
-          helperCooldown;
+        function renderTable() {
+            const selectedHall = filterSelect.value;
+            const now = Date.now();
 
-        return (
-          remainAfterTrigger > 0 &&
-          remainAfterTrigger < 7200
-        );
-      });
-    }
-    function updateFilterWarnings() {
+            const filtered = entries
+                .filter(e => !selectedHall || e.hall === selectedHall)
+                .sort((a, b) => a.timestamp - b.timestamp);
 
-      const now = Date.now();
+            tableBody.innerHTML = '';
+            filtered.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                const diff = entry.timestamp - now;
+                let color = "#e0e0e0";
+                if (diff < 0) color = "#ff6b6b";
+                else if (diff <= 10 * 60000) color = "#ffd166";
 
-      // nhớ hall đang chọn
-      const currentValue =
-        filterSelect.value;
-
-      filterSelect.innerHTML =
-        `<option value="">🔍 Tất cả Hall</option>` +
-
-        halls.map(h => {
-
-          const hallEntries =
-            entries.filter(e =>
-              e.hall === h.name &&
-              e.timestamp > now
-            );
-
-          const hasBuilder =
-            hallEntries.some(
-              e => e.type === "builder hall"
-            );
-
-          const hasLab =
-            hallEntries.some(
-              e => e.type === "lab"
-            );
-
-          const hasSpeedBuilder =
-            hallEntries.some(
-              e => e.type === "speed builder hall"
-            );
-
-          let icons = "";
-
-          // Không có builder đang nâng
-          if (!hasBuilder)
-            icons += " 🔨";
-
-          // Không có lab đang nghiên cứu
-          if (!hasLab)
-            icons += " 🧪";
-
-          // Không có clock tower cooldown
-          if (!hasSpeedBuilder)
-            icons += " ⚡";
-
-          // Có helper_recurrent nhưng còn < 2h
-          if (
-            hallWarnings &&
-            hallWarnings[h.name] &&
-            hallWarnings[h.name].helperWaste
-          ) {
-            icons += " 🚨";
-          }
-
-          return `
-        <option value="${h.name}">
-          ${h.name}${icons}
-        </option>
-      `;
-
-        }).join("");
-
-      // khôi phục hall đã chọn
-      filterSelect.value =
-        currentValue;
-    }
-
-    filterSelect.innerHTML =
-      `<option value="">🔍 Tất cả Hall</option>` +
-      halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
-
-    function saveToStorage() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-    }
-
-    function loadFromStorage() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        entries = JSON.parse(saved);
-        renderTable();
-      }
-    }
-    function addEntry(hall, type, timestamp) {
-
-      const d = new Date(timestamp);
-
-      entries.push({
-        id:
-          Date.now().toString(36) +
-          Math.random().toString(36).slice(2),
-
-        timestamp,
-
-        dateString:
-          d.toLocaleDateString("vi-VN"),
-
-        hh:
-          d.getHours().toString().padStart(2, "0"),
-
-        mm:
-          d.getMinutes().toString().padStart(2, "0"),
-
-        hall,
-        type
-      });
-    }
-    function parseTimeInput(value) {
-      const val = value.trim();
-      if (!/^\d{1,6}$/.test(val)) return 0;
-
-      if (val.length <= 2) return parseInt(val, 10);
-      if (val.length <= 4) {
-        const padded = val.padStart(4, '0');
-        const h = parseInt(padded.slice(0, -2), 10);
-        const m = parseInt(padded.slice(-2), 10);
-        return h * 60 + m;
-      }
-      const padded = val.padStart(6, '0');
-      const d = parseInt(padded.slice(0, -4), 10);
-      const h = parseInt(padded.slice(-4, -2), 10);
-      const m = parseInt(padded.slice(-2), 10);
-      return d * 24 * 60 + h * 60 + m;
-    }
-
-    function formatTimeRemaining(entry) {
-      const diffMs = entry.timestamp - Date.now();
-      if (diffMs <= 0) return "⏰ 00:00";
-
-      let totalMinutes = Math.floor(diffMs / 60000);
-      const days = Math.floor(totalMinutes / (24 * 60));
-      totalMinutes %= 24 * 60;
-      const hours = Math.floor(totalMinutes / 60);
-      const mins = totalMinutes % 60;
-
-      if (days > 0) return `${days}:${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-    }
-
-    function handleInput() {
-      const value = input.value.trim();
-      const hall = hallSelect.value;
-      const type = typeSelect.value;
-
-      const isBoostItem = [
-        "builder hall x10",
-        "builder hall x2",
-        "lab x24",
-        "lab x4"
-      ].includes(type);
-
-      // Nếu không phải boost mà input sai → bỏ qua
-      if (!/^\d{1,6}$/.test(value) && !isBoostItem) {
-        input.value = '';
-        input.focus();
-        return;
-      }
-
-      // Nếu là item boost → cập nhật thời gian của hall tương ứng
-      // Nếu là item boost → cập nhật thời gian của hall tương ứng
-      if (isBoostItem) {
-        const now = Date.now();
-        const targets = entries.filter(e =>
-          e.hall === hall &&
-          (
-            (type.startsWith("builder") && e.type === "normal") ||
-            (type === "lab x24" && e.type === "lab") ||
-            (type === "lab x4" && (e.type === "lab" || e.type === "pet"))
-          )
-        );
-
-        if (targets.length === 0) {
-          alert(`⚠️ Không tìm thấy mục phù hợp (${hall}) để cập nhật.`);
-          return;
-        }
-
-        let reduceHours = 0, divideFactor = 1, threshold = 0;
-        if (type === "builder hall x10") { reduceHours = 9; divideFactor = 10; threshold = 10; }
-        if (type === "builder hall x2") { reduceHours = 1; divideFactor = 2; threshold = 2; }
-        if (type === "lab x24") { reduceHours = 23; divideFactor = 24; threshold = 24; }
-        if (type === "lab x4") { reduceHours = 3; divideFactor = 4; threshold = 4; }
-
-        const reduceMs = reduceHours * 60 * 60 * 1000;
-        const thresholdMs = threshold * 60 * 60 * 1000;
-
-        targets.forEach(t => {
-          const remaining = Math.max(t.timestamp - now, 0);
-          let newRemaining;
-
-          if (remaining >= thresholdMs) {
-            newRemaining = remaining - reduceMs;
-          } else {
-            newRemaining = remaining / divideFactor;
-          }
-
-          t.timestamp = now + newRemaining;
-
-          // 🕒 Cập nhật lại ngày và giờ đến cho đúng
-          const newDate = new Date(t.timestamp);
-          t.dateString = newDate.toLocaleDateString('vi-VN');
-          t.hh = newDate.getHours().toString().padStart(2, '0');
-          t.mm = newDate.getMinutes().toString().padStart(2, '0');
-        });
-
-        saveToStorage();
-        renderTable();
-        return;
-      }
-
-      // === Phần thêm thời gian bình thường ===
-      const now = new Date();
-      const totalMinutes = parseTimeInput(value);
-      const future = new Date(now.getTime() + totalMinutes * 60000);
-
-      const entry = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-        timestamp: future.getTime(),
-        dateString: future.toLocaleDateString('vi-VN'),
-        hh: future.getHours().toString().padStart(2, '0'),
-        mm: future.getMinutes().toString().padStart(2, '0'),
-        type,
-        hall
-      };
-
-      const twoMinutes = 2 * 60000;
-      const tooClose = entries.some(e => e.hall === entry.hall && Math.abs(e.timestamp - entry.timestamp) <= twoMinutes);
-      if (tooClose) return;
-
-      entries.push(entry);
-      saveToStorage();
-      renderTable();
-
-      input.value = '';
-      input.focus();
-    }
-
-    function renderTable() {
-      const selectedHall = filterSelect.value;
-      const now = Date.now();
-
-      const filtered = entries
-        .filter(e => !selectedHall || e.hall === selectedHall)
-        .sort((a, b) => a.timestamp - b.timestamp);
-
-      tableBody.innerHTML = '';
-      filtered.forEach((entry, index) => {
-        const row = document.createElement('tr');
-        const diff = entry.timestamp - now;
-        let color = "#e0e0e0";
-        if (diff < 0) color = "#ff6b6b";
-        else if (diff <= 10 * 60000) color = "#ffd166";
-
-        let timeCellContent = "";
-        if (diff <= 0) {
-          // Khi hết thời gian → hiển thị nút
-          timeCellContent = `<button class="reuse-btn" onclick="reuseEntry('${entry.id}')">🔁 Làm lại</button>`;
-        } else {
-          timeCellContent = formatTimeRemaining(entry);
-        }
-        row.innerHTML = `
+                let timeCellContent = "";
+                if (diff <= 0) {
+                    // Khi hết thời gian → hiển thị nút
+                    timeCellContent = `<button class="reuse-btn" onclick="reuseEntry('${entry.id}')">🔁 Làm lại</button>`;
+                } else {
+                    timeCellContent = formatTimeRemaining(entry);
+                }
+                row.innerHTML = `
         <td>${index + 1}</td>
         <td>${entry.dateString}</td>
         <td>${entry.hh}:${entry.mm}</td>
@@ -529,548 +371,581 @@
         <td>${timeCellContent}</td>
         <td><button class="remove-btn" onclick="removeEntry('${entry.id}')">✕</button></td>
       `;
-        row.style.color = color;
-        tableBody.appendChild(row);
-      });
-      updateFilterWarnings();
-    }
-    function renderFilterSelect() {
-
-      const select =
-        document.getElementById(
-          "filterSelect"
-        );
-
-      const currentValue =
-        select.value;
-
-      select.innerHTML =
-        '<option value="">Tất cả</option>';
-
-      halls.forEach(hall => {
-
-        const option =
-          document.createElement("option");
-
-        option.value = hall;
-
-        option.textContent =
-          warningHalls.has(hall)
-            ? `⚠️ ${hall}`
-            : hall;
-
-        select.appendChild(option);
-      });
-
-      select.value = currentValue;
-    }
-    function removeEntry(id) {
-      entries = entries.filter(e => e.id !== id);
-      saveToStorage();
-      renderTable();
-    }
-    window.removeEntry = removeEntry;
-    function reuseEntry(id) {
-      const entry = entries.find(e => e.id === id);
-      if (!entry) return;
-
-      hallSelect.value = entry.hall;
-      typeSelect.value = entry.type;
-      input.focus();
-
-      // Nếu muốn tự động xoá dòng cũ khi nhấn, bỏ comment dòng dưới:
-      // removeEntry(id);
-    }
-    window.reuseEntry = reuseEntry;
-    input.addEventListener('keydown', (e) => {
-      const triggerKeys = ['Enter', 'Tab', 'NumpadEnter', 'Next', '.', 'NumpadDecimal'];
-      if (
-        triggerKeys.includes(e.key) ||
-        e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 32 || e.key === '.'
-      ) {
-        e.preventDefault();
-        handleInput();
-      }
-    });
-
-    document.getElementById('addBtn').addEventListener('click', handleInput);
-
-    filterSelect.addEventListener('change', () => {
-      renderTable();
-      hallSelect.value = filterSelect.value || halls[0].name;
-    });
-
-    setInterval(renderTable, 60000);
-    loadFromStorage();
-
-    // --- GitHub Sync ---
-    const GITHUB_USER = "thebreaker0032-prog";
-    const REPO_NAME = "thebreaker";
-    const FILE_PATH = "time-tracker-data.json";
-
-    async function promptToken() {
-      let token = localStorage.getItem("GITHUB_TOKEN");
-      if (!token) {
-        token = prompt("🔑 Nhập GitHub Token cá nhân của bạn (PAT):");
-        if (token) localStorage.setItem("GITHUB_TOKEN", token);
-      }
-      return token;
-    }
-
-    async function loadFromGitHub() {
-      const TOKEN = await promptToken();
-      if (!TOKEN) return alert("❌ Chưa nhập token!");
-      try {
-        const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-        const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
-        if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
-        const data = await res.json();
-        const jsonText = atob(data.content.replace(/\n/g, ""));
-        entries = JSON.parse(jsonText);
-        renderTable();
-        saveToStorage();
-        alert("✅ Đã tải dữ liệu từ GitHub!");
-      } catch (err) {
-        console.error(err);
-        alert("❌ Lỗi khi tải dữ liệu: " + err.message);
-        if (err.message.includes("401")) {
-          localStorage.removeItem("GITHUB_TOKEN");
-          alert("🔄 Token có thể sai hoặc hết hạn. Hãy thử tải lại và nhập token mới.");
+                row.style.color = color;
+                tableBody.appendChild(row);
+            });
+            updateFilterWarnings();
         }
-      }
-    }
+        function renderFilterSelect() {
 
-    async function uploadToGitHub(content) {
-      const token = await promptToken();
-      const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-      const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
-      const data = await res.json();
-      const sha = data.sha;
-      const result = await fetch(getUrl, {
-        method: "PUT",
-        headers: {
-          "Authorization": `token ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "Update time tracker data",
-          content: btoa(unescape(encodeURIComponent(content))),
-          sha: sha
-        }),
-      });
-      if (!result.ok) {
-        const err = await result.json();
-        alert(`❌ Lỗi upload: ${result.status} - ${err.message}`);
-      } else {
-        alert("✅ Đã cập nhật file thành công!");
-      }
-    }
+            const select =
+                document.getElementById(
+                    "filterSelect"
+                );
 
-    document.getElementById("loadGitHubBtn").addEventListener("click", loadFromGitHub);
-    document.getElementById("uploadGitHubBtn").addEventListener("click", async () => {
-      const data = JSON.stringify(entries, null, 2);
-      await uploadToGitHub(data);
-    });
-    document.getElementById("resetTokenBtn").addEventListener("click", () => {
-      localStorage.removeItem("GITHUB_TOKEN");
-      alert("✅ Đã xoá token cũ. Khi bạn đồng bộ/tải lại, trình duyệt sẽ hỏi token mới.");
-    });
-    function applyFutureClockTower(
-      buildTimerSec,
-      clockCooldownSec,
-      clockLevel
-    ) {
+            const currentValue =
+                select.value;
 
-      if (!clockLevel) {
-        return buildTimerSec;
-      }
+            select.innerHTML =
+                '<option value="">Tất cả</option>';
 
-      const boostSec =
-        ((clockLevel * 2 + 12) * 9) * 60;
+            halls.forEach(hall => {
 
-      let remaining = buildTimerSec;
-      let nextBoost = clockCooldownSec;
+                const option =
+                    document.createElement("option");
 
-      while (nextBoost < remaining) {
+                option.value = hall;
 
-        remaining -= boostSec;
+                option.textContent =
+                    warningHalls.has(hall)
+                        ? `⚠️ ${hall}`
+                        : hall;
 
-        if (remaining <= 0) {
-          return 0;
+                select.appendChild(option);
+            });
+
+            select.value = currentValue;
         }
-
-        nextBoost += 22 * 3600;
-      }
-
-      return remaining;
-    }
-    function applyFutureResearchAssistant(
-      labTimerSec,
-      helperCooldownSec
-    ) {
-
-      let remaining = labTimerSec;
-      let nextUse = helperCooldownSec;
-
-      const reduceSec = 3600;      // 1h
-      const loopSec = 24 * 3600;   // 24h
-      const minWorthSec = 2 * 3600; // <2h thì bỏ
-
-      while (nextUse < remaining) {
-
-        const labRemainingAtUse =
-          remaining - nextUse;
-
-        // Nếu lúc assistant sẵn sàng mà lab
-        // chỉ còn dưới 2h thì bỏ qua
-        if (labRemainingAtUse < minWorthSec) {
-          break;
+        function removeEntry(id) {
+            entries = entries.filter(e => e.id !== id);
+            saveToStorage();
+            renderTable();
         }
+        window.removeEntry = removeEntry;
+        function reuseEntry(id) {
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
 
-        remaining -= reduceSec;
+            hallSelect.value = entry.hall;
+            typeSelect.value = entry.type;
+            input.focus();
 
-        if (remaining <= 0) {
-          return 0;
+            // Nếu muốn tự động xoá dòng cũ khi nhấn, bỏ comment dòng dưới:
+            // removeEntry(id);
         }
-
-        nextUse += loopSec;
-      }
-
-      return remaining;
-    }
-    function processCOCObject(obj) {
-      const hall = accountMap[obj.tag];
-
-      warningHalls.delete(hall);
-
-      if (hasLabWasteWarning(obj)) {
-        warningHalls.add(hall);
-      }
-      hallWarnings[hall] = {
-        helperWaste: false
-      };
-      if (!hall) {
-        console.warn(
-          "Không tìm thấy hall:",
-          obj.tag
-        );
-        return;
-      }
-
-      // Xóa dữ liệu COC cũ của hall
-      entries = entries.filter(e =>
-        e.hall !== hall ||
-        ![
-          "builder hall",
-          "lab",
-          "pet",
-          "speed lab",
-          "speed builder hall"
-        ].includes(e.type)
-      );
-
-      const baseTime =
-        obj.timestamp * 1000;
-
-      // =====================================================
-      // CLOCK TOWER
-      // =====================================================
-
-      const clockTower =
-        (obj.buildings2 || [])
-          .find(b => b.data === 1000039);
-
-      const clockCooldown =
-        obj.boosts?.clocktower_cooldown || 0;
-
-      const clockLevel =
-        clockTower?.lvl || 0;
-
-      const clockTowerUpgrading =
-        !!clockTower?.timer;
-
-      const clockReduceMinutes =
-        (clockLevel * 2 + 12) * 9;
-
-      // =====================================================
-      // BUILDER HALL
-      // =====================================================
-
-const builderTimers = [
-  ...(obj.buildings2 || []),
-  ...(obj.heroes2 || []),
-  ...(obj.units2 || [])
-];
-
-builderTimers.forEach(item => {
-
-  if (!item.timer) return;
-
-  let remaining = item.timer;
-
-  if (
-    !clockTowerUpgrading &&
-    clockCooldown > 0 &&
-    clockReduceMinutes > 0
-  ) {
-
-    let nextCooldown = clockCooldown;
-
-    while (nextCooldown < remaining) {
-
-      const remainAfterTrigger =
-        remaining - nextCooldown;
-
-      if (remainAfterTrigger < 7200) {
-        break;
-      }
-
-      remaining -=
-        clockReduceMinutes * 60;
-
-      nextCooldown +=
-  22 * 3600 +
-  (12 + clockLevel * 2) * 60;
-    }
-  }
-
-  addEntry(
-    hall,
-    "builder hall",
-    baseTime + remaining * 1000
-  );
-});
-
-      // =====================================================
-      // LAB (units + spells + siege_machines)
-      // =====================================================
-
-      const helperCooldown =
-        obj.helpers?.[0]?.helper_cooldown || 0;
-
-      const helperFinishTime =
-        baseTime +
-        helperCooldown * 1000;
-
-      const labResearches = [
-        ...(obj.units || []),
-        ...(obj.spells || []),
-        ...(obj.siege_machines || []),
-...(obj.pets || [])
-      ];
-
-      const hasRecurringHelper =
-        labResearches.some(
-          item =>
-            item.timer &&
-            item.helper_recurrent === true
-        );
-
-      const recurringResearch =
-        labResearches.find(
-          item =>
-            item.timer &&
-            item.helper_recurrent === true
-        );
-
-      // Cảnh báo Apprentice Researcher sắp bị lãng phí
-      if (
-        recurringResearch &&
-        helperCooldown > 0
-      ) {
-
-        const remainAfterTrigger =
-          recurringResearch.timer -
-          helperCooldown;
-
-        if (
-          remainAfterTrigger > 0 &&
-          remainAfterTrigger < 7200
-        ) {
-          hallWarnings[hall].helperWaste = true;
-        }
-      }
-
-      labResearches.forEach(item => {
-
-        if (!item.timer) return;
-
-        let remaining =
-          item.timer;
-
-        // Apprentice Researcher auto chạy
-        if (
-          item.helper_recurrent === true &&
-          helperCooldown > 0
-        ) {
-
-          let nextCooldown =
-            helperCooldown;
-
-          while (
-            nextCooldown < remaining
-          ) {
-
-            const remainAfterTrigger =
-              remaining -
-              nextCooldown;
-
-            // tránh lãng phí
+        window.reuseEntry = reuseEntry;
+        input.addEventListener('keydown', (e) => {
+            const triggerKeys = ['Enter', 'Tab', 'NumpadEnter', 'Next', '.', 'NumpadDecimal'];
             if (
-              remainAfterTrigger < 7200
+                triggerKeys.includes(e.key) ||
+                e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 32 || e.key === '.'
             ) {
-              break;
+                e.preventDefault();
+                handleInput();
+            }
+        });
+
+        document.getElementById('addBtn').addEventListener('click', handleInput);
+
+        filterSelect.addEventListener('change', () => {
+            renderTable();
+            hallSelect.value = filterSelect.value || halls[0].name;
+        });
+
+        setInterval(renderTable, 60000);
+        loadFromStorage();
+
+        // --- GitHub Sync ---
+        const GITHUB_USER = "thebreaker0032-prog";
+        const REPO_NAME = "thebreaker";
+        const FILE_PATH = "time-tracker-data.json";
+
+        async function promptToken() {
+            let token = localStorage.getItem("GITHUB_TOKEN");
+            if (!token) {
+                token = prompt("🔑 Nhập GitHub Token cá nhân của bạn (PAT):");
+                if (token) localStorage.setItem("GITHUB_TOKEN", token);
+            }
+            return token;
+        }
+
+        async function loadFromGitHub() {
+            const TOKEN = await promptToken();
+            if (!TOKEN) return alert("❌ Chưa nhập token!");
+            try {
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
+                const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
+                if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
+                const data = await res.json();
+                const jsonText = atob(data.content.replace(/\n/g, ""));
+                entries = JSON.parse(jsonText);
+                renderTable();
+                saveToStorage();
+                alert("✅ Đã tải dữ liệu từ GitHub!");
+            } catch (err) {
+                console.error(err);
+                alert("❌ Lỗi khi tải dữ liệu: " + err.message);
+                if (err.message.includes("401")) {
+                    localStorage.removeItem("GITHUB_TOKEN");
+                    alert("🔄 Token có thể sai hoặc hết hạn. Hãy thử tải lại và nhập token mới.");
+                }
+            }
+        }
+
+        async function uploadToGitHub(content) {
+            const token = await promptToken();
+            const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
+            const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
+            const data = await res.json();
+            const sha = data.sha;
+            const result = await fetch(getUrl, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message: "Update time tracker data",
+                    content: btoa(unescape(encodeURIComponent(content))),
+                    sha: sha
+                }),
+            });
+            if (!result.ok) {
+                const err = await result.json();
+                alert(`❌ Lỗi upload: ${result.status} - ${err.message}`);
+            } else {
+                alert("✅ Đã cập nhật file thành công!");
+            }
+        }
+
+        document.getElementById("loadGitHubBtn").addEventListener("click", loadFromGitHub);
+        document.getElementById("uploadGitHubBtn").addEventListener("click", async () => {
+            const data = JSON.stringify(entries, null, 2);
+            await uploadToGitHub(data);
+        });
+        document.getElementById("resetTokenBtn").addEventListener("click", () => {
+            localStorage.removeItem("GITHUB_TOKEN");
+            alert("✅ Đã xoá token cũ. Khi bạn đồng bộ/tải lại, trình duyệt sẽ hỏi token mới.");
+        });
+        function applyFutureClockTower(
+            buildTimerSec,
+            clockCooldownSec,
+            clockLevel
+        ) {
+
+            if (!clockLevel) {
+                return buildTimerSec;
             }
 
-            remaining -= 3600;
+            const boostSec =
+                ((clockLevel * 2 + 12) * 9) * 60;
 
-            nextCooldown +=
-              24 * 3600;
-          }
+            let remaining = buildTimerSec;
+            let nextBoost = clockCooldownSec;
+
+            while (nextBoost < remaining) {
+
+                remaining -= boostSec;
+
+                if (remaining <= 0) {
+                    return 0;
+                }
+
+                nextBoost += 22 * 3600;
+            }
+
+            return remaining;
         }
+        function applyFutureResearchAssistant(
+            labTimerSec,
+            helperCooldownSec
+        ) {
 
-        addEntry(
-          hall,
-          "lab",
-          baseTime +
-          remaining * 1000
-        );
-      });
+            let remaining = labTimerSec;
+            let nextUse = helperCooldownSec;
 
-      // =====================================================
-      // SPEED LAB
-      // Chỉ hiện nếu không có research nào
-      // đang bật helper_recurrent
-      // =====================================================
+            const reduceSec = 3600;      // 1h
+            const loopSec = 24 * 3600;   // 24h
+            const minWorthSec = 2 * 3600; // <2h thì bỏ
 
-      if (
-        helperCooldown > 0 &&
-        !hasRecurringHelper
-      ) {
+            while (nextUse < remaining) {
 
-        addEntry(
-          hall,
-          "speed lab",
-          helperFinishTime
-        );
-      }
+                const labRemainingAtUse =
+                    remaining - nextUse;
 
-      // =====================================================
-      // SPEED BUILDER HALL
-      // =====================================================
+                // Nếu lúc assistant sẵn sàng mà lab
+                // chỉ còn dưới 2h thì bỏ qua
+                if (labRemainingAtUse < minWorthSec) {
+                    break;
+                }
 
-      if (clockCooldown > 0) {
+                remaining -= reduceSec;
 
-        addEntry(
-          hall,
-          "speed builder hall",
-          baseTime +
-          clockCooldown * 1000
-        );
-      }
-    }
-    function splitJSONObjects(text) {
+                if (remaining <= 0) {
+                    return 0;
+                }
 
-      const objects = [];
+                nextUse += loopSec;
+            }
 
-      let depth = 0;
-      let start = -1;
-
-      for (let i = 0; i < text.length; i++) {
-
-        const ch = text[i];
-
-        if (ch === "{") {
-
-          if (depth === 0)
-            start = i;
-
-          depth++;
+            return remaining;
         }
-        else if (ch === "}") {
+        function processCOCObject(obj) {
+            const hall = accountMap[obj.tag];
 
-          depth--;
+            warningHalls.delete(hall);
 
-          if (depth === 0 && start !== -1) {
+            if (hasLabWasteWarning(obj)) {
+                warningHalls.add(hall);
+            }
+            hallWarnings[hall] = {
+                helperWaste: false
+            };
+            if (!hall) {
+                console.warn(
+                    "Không tìm thấy hall:",
+                    obj.tag
+                );
+                return;
+            }
 
-            objects.push(
-              text.slice(start, i + 1)
+            // Xóa dữ liệu COC cũ của hall
+            entries = entries.filter(e =>
+                e.hall !== hall ||
+                ![
+                    "builder hall",
+                    "lab",
+                    "pet",
+                    "speed lab",
+                    "speed builder hall"
+                ].includes(e.type)
             );
 
-            start = -1;
-          }
+            const baseTime =
+                obj.timestamp * 1000;
+
+            // =====================================================
+            // CLOCK TOWER
+            // =====================================================
+
+            const clockTower =
+                (obj.buildings2 || [])
+                    .find(b => b.data === 1000039);
+
+            const clockCooldown =
+                obj.boosts?.clocktower_cooldown || 0;
+
+            const clockLevel =
+                clockTower?.lvl || 0;
+
+            const clockTowerUpgrading =
+                !!clockTower?.timer;
+
+            const clockReduceMinutes =
+                (clockLevel * 2 + 12) * 9;
+
+            // =====================================================
+            // BUILDER HALL
+            // =====================================================
+
+            const builderTimers = [
+                ...(obj.buildings2 || []),
+                ...(obj.heroes2 || []),
+                ...(obj.units2 || [])
+            ];
+
+            builderTimers.forEach(item => {
+
+                if (!item.timer) return;
+
+                let remaining = item.timer;
+
+                if (
+                    !clockTowerUpgrading &&
+                    clockCooldown > 0 &&
+                    clockReduceMinutes > 0
+                ) {
+
+                    let nextCooldown = clockCooldown;
+
+                    while (nextCooldown < remaining) {
+
+                        const remainAfterTrigger =
+                            remaining - nextCooldown;
+
+                        if (remainAfterTrigger < 7200) {
+                            break;
+                        }
+
+                        remaining -=
+                            clockReduceMinutes * 60;
+
+                        nextCooldown +=
+                            22 * 3600 +
+                            (12 + clockLevel * 2) * 60;
+                    }
+                }
+
+                addEntry(
+                    hall,
+                    "builder hall",
+                    baseTime + remaining * 1000
+                );
+            });
+
+            // =====================================================
+            // LAB (units + spells + siege_machines)
+            // =====================================================
+
+            const helperCooldown =
+                obj.helpers?.[0]?.helper_cooldown || 0;
+
+            const helperFinishTime =
+                baseTime +
+                helperCooldown * 1000;
+
+            const labResearches = [
+                ...(obj.units || []),
+                ...(obj.spells || []),
+                ...(obj.siege_machines || [])
+            ];
+            const petResearches = [
+                ...(obj.pets || [])
+            ];
+            const hasRecurringHelper =
+                labResearches.some(
+                    item =>
+                        item.timer &&
+                        item.helper_recurrent === true
+                );
+
+            const recurringResearch =
+                labResearches.find(
+                    item =>
+                        item.timer &&
+                        item.helper_recurrent === true
+                );
+
+            // Cảnh báo Apprentice Researcher sắp bị lãng phí
+            if (
+                recurringResearch &&
+                helperCooldown > 0
+            ) {
+
+                const remainAfterTrigger =
+                    recurringResearch.timer -
+                    helperCooldown;
+
+                if (
+                    remainAfterTrigger > 0 &&
+                    remainAfterTrigger < 7200
+                ) {
+                    hallWarnings[hall].helperWaste = true;
+                }
+            }
+
+            labResearches.forEach(item => {
+
+                if (!item.timer) return;
+
+                let remaining = item.timer;
+                remaining = apply24xBoost(remaining, obj.boosts?.lab_boost || 0);
+                // Apprentice Researcher auto chạy
+                if (
+                    item.helper_recurrent === true &&
+                    helperCooldown > 0
+                ) {
+
+                    let nextCooldown =
+                        helperCooldown;
+
+                    while (
+                        nextCooldown < remaining
+                    ) {
+
+                        const remainAfterTrigger =
+                            remaining -
+                            nextCooldown;
+
+                        // tránh lãng phí
+                        if (
+                            remainAfterTrigger < 7200
+                        ) {
+                            break;
+                        }
+
+                        remaining -= 3600;
+
+                        nextCooldown +=
+                            24 * 3600;
+                    }
+                }
+
+                addEntry(
+                    hall,
+                    "lab",
+                    baseTime +
+                    remaining * 1000
+                );
+            });
+            petResearches.forEach(item => {
+
+                if (!item.timer) return;
+
+                let remaining = item.timer;
+                remaining = apply24xBoost(remaining, obj.boosts?.pet_boost || 0);
+                const petBoost = obj.boosts?.pet_boost || 0;
+                if (
+                    item.helper_recurrent === true &&
+                    helperCooldown > 0
+                ) {
+
+                    let nextCooldown = helperCooldown;
+
+                    while (nextCooldown < remaining) {
+
+                        const remainAfterTrigger =
+                            remaining - nextCooldown;
+
+                        if (remainAfterTrigger < 7200)
+                            break;
+
+                        remaining -= 3600;
+                        nextCooldown += 24 * 3600;
+                    }
+                }
+
+                addEntry(
+                    hall,
+                    "pet",
+                    baseTime + remaining * 1000
+                );
+            });
+
+            // =====================================================
+            // SPEED LAB
+            // Chỉ hiện nếu không có research nào
+            // đang bật helper_recurrent
+            // =====================================================
+
+            if (
+                helperCooldown > 0 &&
+                !hasRecurringHelper
+            ) {
+
+                addEntry(
+                    hall,
+                    "speed lab",
+                    helperFinishTime
+                );
+            }
+
+            // =====================================================
+            // SPEED BUILDER HALL
+            // =====================================================
+
+            if (clockCooldown > 0) {
+
+                addEntry(
+                    hall,
+                    "speed builder hall",
+                    baseTime +
+                    clockCooldown * 1000
+                );
+            }
         }
-      }
+        function splitJSONObjects(text) {
 
-      return objects;
-    }
+            const objects = [];
 
-    function importCOC() {
+            let depth = 0;
+            let start = -1;
 
-      try {
+            for (let i = 0; i < text.length; i++) {
 
-        const text =
-          document.getElementById("cocInput")
-            .value
-            .trim();
+                const ch = text[i];
 
-        if (!text) {
+                if (ch === "{") {
 
-          alert("Chưa có dữ liệu");
-          return;
+                    if (depth === 0)
+                        start = i;
+
+                    depth++;
+                }
+                else if (ch === "}") {
+
+                    depth--;
+
+                    if (depth === 0 && start !== -1) {
+
+                        objects.push(
+                            text.slice(start, i + 1)
+                        );
+
+                        start = -1;
+                    }
+                }
+            }
+
+            return objects;
         }
 
-        const jsonObjects =
-          splitJSONObjects(text);
+        function importCOC() {
 
-        if (!jsonObjects.length) {
+            try {
 
-          alert("Không tìm thấy JSON hợp lệ");
-          return;
+                const text =
+                    document.getElementById("cocInput")
+                        .value
+                        .trim();
+
+                if (!text) {
+
+                    alert("Chưa có dữ liệu");
+                    return;
+                }
+
+                const jsonObjects =
+                    splitJSONObjects(text);
+
+                if (!jsonObjects.length) {
+
+                    alert("Không tìm thấy JSON hợp lệ");
+                    return;
+                }
+
+                let imported = 0;
+
+                for (const json of jsonObjects) {
+
+                    try {
+
+                        const obj =
+                            JSON.parse(json);
+
+                        processCOCObject(obj);
+
+                        imported++;
+
+                    }
+                    catch (err) {
+
+                        console.error(
+                            "JSON lỗi:",
+                            err
+                        );
+                    }
+                }
+
+                saveToStorage();
+                renderTable();
+
+                alert(
+                    `✅ Import thành công ${imported} account`
+                );
+
+            }
+            catch (e) {
+
+                console.error(e);
+
+                alert(
+                    "JSON lỗi:\n" +
+                    e.message
+                );
+            }
         }
-
-        let imported = 0;
-
-        for (const json of jsonObjects) {
-
-          try {
-
-            const obj =
-              JSON.parse(json);
-
-            processCOCObject(obj);
-
-            imported++;
-
-          }
-          catch (err) {
-
-            console.error(
-              "JSON lỗi:",
-              err
-            );
-          }
-        }
-
-        saveToStorage();
-        renderTable();
-
-        alert(
-          `✅ Import thành công ${imported} account`
-        );
-
-      }
-      catch (e) {
-
-        console.error(e);
-
-        alert(
-          "JSON lỗi:\n" +
-          e.message
-        );
-      }
-    }
-  </script>
+    </script>
 
 </body>
 
