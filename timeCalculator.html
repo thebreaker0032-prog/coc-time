@@ -133,10 +133,6 @@
         .reuse-btn:hover {
             background-color: #555;
         }
-
-        #filterSelect {
-            font-family: Consolas, "Courier New", monospace;
-        }
     </style>
 </head>
 
@@ -207,6 +203,7 @@
         const halls = [{ name: "1" }, { name: "2" }, { name: "3" }, { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" }, { name: "9" }, { name: "10" }];
         const hallWarnings = {};
         const warningHalls = new Set();
+
         hallSelect.innerHTML = halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
         function hasLabWasteWarning(obj) {
             const helperCooldown = obj.helpers?.[0]?.helper_cooldown || 0;
@@ -249,6 +246,8 @@
                     if (speedBuilderCount) text += `⚡${pad(speedBuilderCount)} | `;
                     if (speedLabCount) text += `🚀${pad(speedLabCount)}`;
                     if (hallWarnings && hallWarnings[h.name]?.helperWaste) text += " 🚨";
+                    if (hallWarnings[h.name]?.labBoostWaste) text += " ⚠️";
+                    if (hallWarnings[h.name]?.petBoostWaste) text += " ⚠️";
                     return `<option value="${h.name}">${text}</option>`;
                 }).join("");
             filterSelect.value = currentValue;
@@ -733,13 +732,22 @@
                     hallWarnings[hall].helperWaste = true;
                 }
             }
+            const labBoost = obj.boosts?.lab_boost || 0;
+            const petBoost = obj.boosts?.pet_boost || 0;
 
+            let wastedLabBoost = false;
+            let wastedPetBoost = false;
             labResearches.forEach(item => {
-
                 if (!item.timer) return;
 
                 let remaining = item.timer;
-                remaining = apply24xBoost(remaining, obj.boosts?.lab_boost || 0);
+                if (labBoost > 0) {
+                    const finishDuringBoost = Math.ceil(item.timer / 24);
+                    if (finishDuringBoost < labBoost) {
+                        wastedLabBoost = true;
+                    }
+                    remaining = apply24xBoost(remaining, labBoost);
+                }
                 // Apprentice Researcher auto chạy
                 if (
                     item.helper_recurrent === true &&
@@ -779,30 +787,12 @@
                 );
             });
             petResearches.forEach(item => {
-
                 if (!item.timer) return;
-
                 let remaining = item.timer;
-                remaining = apply24xBoost(remaining, obj.boosts?.pet_boost || 0);
-                const petBoost = obj.boosts?.pet_boost || 0;
-                if (
-                    item.helper_recurrent === true &&
-                    helperCooldown > 0
-                ) {
-
-                    let nextCooldown = helperCooldown;
-
-                    while (nextCooldown < remaining) {
-
-                        const remainAfterTrigger =
-                            remaining - nextCooldown;
-
-                        if (remainAfterTrigger < 7200)
-                            break;
-
-                        remaining -= 3600;
-                        nextCooldown += 24 * 3600;
-                    }
+                if (petBoost > 0) {
+                    const finishDuringBoost = Math.ceil(item.timer / 24);
+                    if (finishDuringBoost < petBoost) wastedPetBoost = true;
+                    remaining = apply24xBoost(remaining, petBoost);
                 }
 
                 addEntry(
@@ -811,7 +801,10 @@
                     baseTime + remaining * 1000
                 );
             });
+            hallWarnings[hall] ??= {};
 
+            hallWarnings[hall].labBoostWaste = wastedLabBoost;
+            hallWarnings[hall].petBoostWaste = wastedPetBoost;
             // =====================================================
             // SPEED LAB
             // Chỉ hiện nếu không có research nào
