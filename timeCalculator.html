@@ -218,14 +218,28 @@
         function pad(n) {
             return String(n).padStart(2, " ");
         }
+        function apply4xBoost(timer, boost) {
+            const boostedTime = Math.min(boost, Math.ceil(timer / 4));
+            return (timer - boostedTime * 4 + boostedTime);
+        }
+        function apply2xBoost(timer, boostSeconds) {
+            if (boostSeconds <= 0) return timer;
+            const boosted = boostSeconds * 2;
+            if (boosted >= timer) {
+                return Math.ceil(timer / 2);
+            }
+            return boostSeconds + (timer - boosted);
+        }
+        function apply10xBoost(timer, boost) {
+            const boostedTime = Math.min(boost, Math.ceil(timer / 10));
+            return (timer - boostedTime * 10 + boostedTime);
+        }
         function apply24xBoost(timer, boostSeconds) {
             if (boostSeconds <= 0) return timer;
             const boosted = boostSeconds * 24;
-            // Boost đủ để hoàn thành
             if (boosted >= timer) {
                 return Math.ceil(timer / 24);
             }
-            // Boost hết trước
             return boostSeconds + (timer - boosted);
         }
         function updateFilterWarnings() {
@@ -239,15 +253,16 @@
                     const speedBuilderCount = hallEntries.filter(e => e.type === "speed builder hall").length;
                     const speedLabCount = hallEntries.filter(e => e.type === "speed lab").length;
                     const petCount = hallEntries.filter(e => e.type === "pet").length;
+                    const normalCount = hallEntries.filter(e => e.type === "normal").length;
                     let text = `${h.name.padStart(9, " ")} | `;
+                    if (normalCount) text += `🏗️${pad(normalCount)} | `;
                     if (builderCount) text += `🔨${pad(builderCount)} | `;
                     if (labCount) text += `🧪${pad(labCount)} | `;
-                    if (petCount) text += ` 🐾${pad(petCount)} | `;
+                    if (petCount) text += `🐾${pad(petCount)} | `;
                     if (speedBuilderCount) text += `⚡${pad(speedBuilderCount)} | `;
                     if (speedLabCount) text += `🚀${pad(speedLabCount)}`;
                     if (hallWarnings && hallWarnings[h.name]?.helperWaste) text += " 🚨";
-                    if (hallWarnings[h.name]?.labBoostWaste) text += " ⚠️";
-                    if (hallWarnings[h.name]?.petBoostWaste) text += " ⚠️";
+                    if (hallWarnings[h.name]?.labBoostWaste || hallWarnings[h.name]?.petBoostWaste || hallWarnings[h.name]?.builderBoostWaste || hallWarnings[h.name]?.labConsumableWaste || hallWarnings[h.name]?.builder10BoostWaste) text += " ⚠️";
                     return `<option value="${h.name}">${text}</option>`;
                 }).join("");
             filterSelect.value = currentValue;
@@ -583,7 +598,10 @@
             const hall = accountMap[obj.tag];
 
             warningHalls.delete(hall);
-
+            const builderBoost = obj.boosts?.builder_consumable || 0;
+            const builderBoost10 = obj.boosts?.builder_boost || 0;
+            let wastedBuilderBoost = false;
+            let wastedBuilder10Boost = false;
             if (hasLabWasteWarning(obj)) {
                 warningHalls.add(hall);
             }
@@ -602,6 +620,7 @@
             entries = entries.filter(e =>
                 e.hall !== hall ||
                 ![
+                    "normal",
                     "builder hall",
                     "lab",
                     "pet",
@@ -632,7 +651,31 @@
 
             const clockReduceMinutes =
                 (clockLevel * 2 + 12) * 9;
+            const normalItems = [
+                ...(obj.buildings || []),
+                ...(obj.traps || []),
+                ...(obj.heroes || [])
+            ];
+            normalItems.forEach(item => {
+                if (!item.timer) return;
+                let remaining = item.timer;
+                if (builderBoost10 > 0) {
+                    const finishDuringBoost = Math.ceil(remaining / 10);
+                    if (finishDuringBoost < builderBoost10) {
+                        wastedBuilder10Boost = true;
+                    }
+                    remaining = apply10xBoost(remaining, builderBoost10);
+                }
+                if (builderBoost > 0) {
+                    const finishDuringConsumable = Math.ceil(remaining / 2);
+                    if (finishDuringConsumable < builderBoost) {
+                        wastedBuilderBoost = true;
+                    }
+                    remaining = apply2xBoost(remaining, builderBoost);
+                }
+                addEntry(hall, "normal", baseTime + remaining * 1000);
 
+            });
             // =====================================================
             // BUILDER HALL
             // =====================================================
@@ -734,19 +777,27 @@
             }
             const labBoost = obj.boosts?.lab_boost || 0;
             const petBoost = obj.boosts?.pet_boost || 0;
-
+            const labConsumable = obj.boosts?.lab_consumable || 0;
             let wastedLabBoost = false;
             let wastedPetBoost = false;
+            let wastedLabConsumable = false;
             labResearches.forEach(item => {
                 if (!item.timer) return;
 
                 let remaining = item.timer;
                 if (labBoost > 0) {
-                    const finishDuringBoost = Math.ceil(item.timer / 24);
+                    const finishDuringBoost = Math.ceil(remaining / 24);
                     if (finishDuringBoost < labBoost) {
                         wastedLabBoost = true;
                     }
                     remaining = apply24xBoost(remaining, labBoost);
+                }
+                if (labConsumable > 0) {
+                    const finishDuringConsumable = Math.ceil(remaining / 4);
+                    if (finishDuringConsumable < labConsumable) {
+                        wastedLabConsumable = true;
+                    }
+                    remaining = apply4xBoost(remaining, labConsumable);
                 }
                 // Apprentice Researcher auto chạy
                 if (
@@ -779,32 +830,33 @@
                     }
                 }
 
-                addEntry(
-                    hall,
-                    "lab",
-                    baseTime +
-                    remaining * 1000
-                );
+                addEntry(hall, "lab", baseTime + remaining * 1000);
             });
             petResearches.forEach(item => {
                 if (!item.timer) return;
                 let remaining = item.timer;
                 if (petBoost > 0) {
-                    const finishDuringBoost = Math.ceil(item.timer / 24);
-                    if (finishDuringBoost < petBoost) wastedPetBoost = true;
+                    const finishDuringBoost = Math.ceil(remaining / 24);
+                    if (finishDuringBoost < petBoost) {
+                        wastedPetBoost = true;
+                    }
                     remaining = apply24xBoost(remaining, petBoost);
                 }
-
-                addEntry(
-                    hall,
-                    "pet",
-                    baseTime + remaining * 1000
-                );
+                if (labConsumable > 0) {
+                    const finishDuringConsumable = Math.ceil(remaining / 4);
+                    if (finishDuringConsumable < labConsumable) {
+                        wastedLabConsumable = true;
+                    }
+                    remaining = apply4xBoost(remaining, labConsumable);
+                }
+                addEntry(hall, "pet", baseTime + remaining * 1000);
             });
             hallWarnings[hall] ??= {};
-
+            hallWarnings[hall].builderBoostWaste = wastedBuilderBoost;
             hallWarnings[hall].labBoostWaste = wastedLabBoost;
             hallWarnings[hall].petBoostWaste = wastedPetBoost;
+            hallWarnings[hall].labConsumableWaste = wastedLabConsumable;
+            hallWarnings[hall].builder10BoostWaste = wastedBuilder10Boost;
             // =====================================================
             // SPEED LAB
             // Chỉ hiện nếu không có research nào
