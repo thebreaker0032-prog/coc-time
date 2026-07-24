@@ -139,36 +139,31 @@
 <body>
 
     <h2>⏱️ Tính thời gian đến</h2>
+
     <textarea id="cocInput" style="
-    width:100%;
-    height:180px;
-    background:#2d2d2d;
-    color:white;
-    margin-bottom:10px;
-  " placeholder="Paste JSON Clash of Clans vào đây">
+        width:100%;
+        height:180px;
+        background:#2d2d2d;
+        color:white;
+        margin-bottom:10px;
+    " placeholder="Paste JSON Clash of Clans vào đây">
 </textarea>
 
-    <button onclick="importCOC()">
-        Import Clash Of Clans
-    </button>
-    <div class="input-group">
-        <input id="timeInput" type="number" placeholder="Nhập phút hoặc giờ+phút (vd: 45 hoặc 130)" inputmode="numeric">
-        <select id="hallSelect"></select>
-        <select id="typeSelect">
-            <option value="lab">lab</option>
-            <option value="pet">pet</option>
-            <option value="speed lab">speed lab</option>
-            <option value="builder hall">builder hall</option>
-            <option value="speed builder hall">speed builder hall</option>
-            <option value="normal">normal</option>
-        </select>
-        <button id="addBtn">➕ Thêm ⏱️</button>
+    <div class="action-buttons">
+        <button onclick="importCOC()">
+            Import Clash Of Clans
+        </button>
+
+        <button id="copyBuildBtn" onclick="copyBuildList()" style="display:none">
+            Copy accountBuildList
+        </button>
     </div>
 
     <div class="action-buttons">
         <select id="filterSelect">
             <option value="">🔍 Tất cả Hall</option>
         </select>
+
         <button id="loadGitHubBtn">Load</button>
         <button id="uploadGitHubBtn">Save</button>
         <button id="resetTokenBtn">Reset</button>
@@ -192,19 +187,402 @@
     </div>
 
     <script>
-        const input = document.getElementById('timeInput');
-        const hallSelect = document.getElementById('hallSelect');
-        const typeSelect = document.getElementById('typeSelect');
         const tableBody = document.querySelector('#resultTable tbody');
         const filterSelect = document.getElementById('filterSelect');
         let entries = [];
         const STORAGE_KEY = "time_entries_v3";
-        const accountMap = { "#R0V0P2QRL": "1", "#GCL0UCPYU": "2", "#R9RRYVJLY": "3", "#GUC8YLLCQ": "4", "#GG99VG02P": "5", "#GQQQ2QR02": "6", "#R28PGJR2Q": "7", "#R9RRL98JV": "8", "#GG99VJGRP": "9", "#R28Q9L9PP": "10" };
-        const halls = [{ name: "1" }, { name: "2" }, { name: "3" }, { name: "4" }, { name: "5" }, { name: "6" }, { name: "7" }, { name: "8" }, { name: "9" }, { name: "10" }];
+        const accountMap = {"#R0V0P2QRL": "1", "#GCL0UCPYU": "2", "#R9RRYVJLY": "3", "#GUC8YLLCQ": "4", "#GG99VG02P": "5", "#GQQQ2QR02": "6", "#R28PGJR2Q": "7", "#R9RRL98JV": "8", "#GG99VJGRP": "9", "#R28Q9L9PP": "10"};
+        const halls = [{name: "1"}, {name: "2"}, {name: "3"}, {name: "4"}, {name: "5"}, {name: "6"}, {name: "7"}, {name: "8"}, {name: "9"}, {name: "10"}];
         const hallWarnings = {};
         const warningHalls = new Set();
+        const buildingMap = {
+            1000000: "army",
+            1000001: "town",
+            1000002: "rco",
+            1000003: "rst",
+            1000004: "dmi",
+            1000005: "dst",
+            1000006: "barr",
+            1000007: "lab",
+            1000008: "can",
+            1000009: "rto",
+            1000011: "rdt",
+            1000012: "rde",
+            1000013: "mor",
+            1000014: "clan",
+            1000019: "nte",
+            1000020: "fac",
+            1000021: "bow",
+            1000023: "darkelixird",
+            1000024: "darkelixirst",
+            1000026: "darkbarr",
+            1000027: "fer",
+            1000028: "rsw",
+            1000029: "darkspell",
+            1000031: "gle",
+            1000032: "bto",
+            1000059: "rks",
+            1000067: "ter",
+            1000068: "eth",
+            1000070: "acksm",
+            1000071: "hero",
+            1000072: "ellt",
+            1000077: "nol",
+            1000093: "der",
+            28000000: "king",
+            28000001: "ueen",
+            28000002: "grand",
+            28000004: "champ",
+            28000006: "prin",
+            28000007: "duke"
+        };
 
-        hallSelect.innerHTML = halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
+        const accountMap0 = {
+            "#R0V0P2QRL": 0,
+            "#GCL0UCPYU": 1,
+            "#R9RRYVJLY": 2,
+            "#GUC8YLLCQ": 3,
+            "#GG99VG02P": 4,
+            "#GQQQ2QR02": 5,
+            "#R28PGJR2Q": 6,
+            "#R9RRL98JV": 7,
+            "#GG99VJGRP": 8,
+            "#R28Q9L9PP": 9
+        };
+
+        function splitObjects(text) {
+
+            const result = [];
+
+            let depth = 0;
+            let start = -1;
+
+            for (let i = 0; i < text.length; i++) {
+
+                if (text[i] === "{") {
+
+                    if (depth === 0) {
+                        start = i;
+                    }
+
+                    depth++;
+                }
+
+                else if (text[i] === "}") {
+
+                    depth--;
+
+                    if (depth === 0 && start !== -1) {
+
+                        result.push(
+                            text.substring(start, i + 1)
+                        );
+                    }
+                }
+            }
+
+            return result;
+        }
+        const maxLevelByTH = {
+            clan: [0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            army: [0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 11, 12, 12, 12, 12],
+            barr: [0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 18, 19],
+            lab: [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            fac: [0, 0, 0, 0, 0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 7, 8, 8, 8, 9],
+            darkbarr: [0, 0, 0, 0, 0, 0, 0, 2, 4, 6, 7, 8, 9, 10, 11, 12, 12, 12, 12],
+            hero: [0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+            darkspell: [0, 0, 0, 0, 0, 0, 0, 0, 2, 4, 5, 5, 6, 6, 7, 7, 7, 7, 7],
+            acksm: [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9],
+            rks: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 6, 7, 8, 8, 8],
+            eth: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 8, 10, 11, 12],
+            can: [0, 2, 3, 4, 5, 6, 7, 8, 10, 11, 13, 15, 17, 19, 20, 21, 21, 21],
+            rto: [0, 0, 2, 3, 4, 6, 7, 8, 10, 11, 13, 15, 17, 19, 20, 21, 21, 21, 21],
+            mor: [0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 13, 14, 15, 16, 17, 18],
+            rde: [0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+            rdt: [0, 0, 0, 0, 0, 2, 3, 4, 6, 7, 9, 10, 11, 13, 14, 15, 16, 17, 17],
+            rsw: [0, 0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7, 7],
+            nte: [0, 0, 0, 0, 0, 0, 0, 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17],
+            bto: [0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13],
+            bow: [0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 4, 5, 6, 8, 9, 10, 11, 12, 12],
+            fer: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 6, 7, 8, 9, 10, 11, 12],
+            gle: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 7],
+            ter: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 5, 6, 6],
+            der: [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 5, 6, 7, 7],
+            ellt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 4, 4],
+            nol: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4, 4],
+            mul: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4],
+            ric: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4]
+        };
+
+        const upgradeTarget = {
+            can: 4,
+            rto: 4,
+        };
+
+        function addBuildingLevels(arr, map) {
+
+            if (!Array.isArray(arr)) return;
+
+            arr.forEach(item => {
+
+                const name =
+                    buildingMap[item.data];
+
+                if (!name) return;
+
+                // Town Hall
+                if (item.data === 1000001) {
+
+                    map[name] = item.lvl;
+                    return;
+                }
+
+                // Có cnt
+                if (item.cnt != null) {
+
+                    if (!map[name]) {
+                        map[name] = [];
+                    }
+
+                    for (
+                        let i = 0;
+                        i < item.cnt;
+                        i++
+                    ) {
+                        map[name].push(
+                            item.lvl || 0
+                        );
+                    }
+
+                    return;
+                }
+
+                // Không có cnt
+                // chỉ tạo [] nếu lvl > 0
+                // Hero
+                if (
+                    item.data >= 28000000 &&
+                    item.data <= 28000007
+                ) {
+                    if (item.timer) {
+                        map[name] = [];
+                    } else {
+                        map[name] = [item.lvl || 0];
+                    }
+                    return;
+                }
+            });
+        }
+
+        function addTimers(
+            arr,
+            timestamp,
+            result
+        ) {
+
+            if (!Array.isArray(arr)) return;
+
+            arr.forEach(item => {
+
+                if (!item.timer) return;
+
+                const name =
+                    buildingMap[item.data];
+
+                if (!name) return;
+
+                result.push([
+                    name,
+                    String(
+                        (timestamp + item.timer)
+                        * 1000
+                    ),
+                    (item.lvl || 0) + 1
+                ]);
+            });
+        }
+        function addUpgradeList(buildMap) {
+
+            const th = buildMap.town || 1;
+
+            const upgradeList = [];
+
+            Object.entries(upgradeTarget).forEach(([name, count]) => {
+
+                const levels = buildMap[name];
+
+                if (!Array.isArray(levels)) {
+                    return;
+                }
+
+                const table = maxLevelByTH[name];
+
+                if (!table) {
+                    return;
+                }
+
+                const maxLevel =
+                    table[Math.min(th, table.length - 1)];
+
+                if (maxLevel <= 0) {
+                    return;
+                }
+
+                // Chỉ lấy các công trình CHƯA MAX
+                const selectLevels = [...levels]
+                    .filter(level => level < maxLevel)
+                    .sort((a, b) => b - a)
+                    .slice(0, count);
+
+                selectLevels.forEach(level => {
+
+                    for (
+                        let lv = level + 1;
+                        lv <= maxLevel;
+                        lv++
+                    ) {
+
+                        upgradeList.push(
+                            `${name}-${lv}`
+                        );
+                    }
+
+                });
+
+            });
+
+            buildMap.upgrade = upgradeList;
+        }
+        function exportTime() {
+
+            try {
+
+                const input =
+                    document
+                        .getElementById("input")
+                        .value
+                        .trim();
+
+                const objects =
+                    splitObjects(input);
+
+                const outputs = [];
+
+                objects.forEach(text => {
+
+                    const obj =
+                        JSON.parse(text);
+
+                    const accountId =
+                        accountMap0[obj.tag];
+
+                    if (
+                        accountId === undefined
+                    ) {
+
+                        outputs.push(
+                            `// Không tìm thấy account ${obj.tag}`
+                        );
+
+                        return;
+                    }
+
+                    const buildMap = {};
+                    const timeList = [];
+
+                    addBuildingLevels(
+                        obj.buildings,
+                        buildMap
+                    );
+                    addBuildingLevels(
+                        obj.heroes,
+                        buildMap
+                    );
+                    addTimers(
+                        obj.buildings,
+                        obj.timestamp,
+                        timeList
+                    );
+                    addTimers(
+                        obj.heroes,
+                        obj.timestamp,
+                        timeList
+                    );
+                    Object.entries(buildMap)
+                        .forEach(
+                            ([key, value]) => {
+
+                                outputs.push(
+                                    `accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`
+                                );
+                            }
+                        );
+
+                    outputs.push(
+                        `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`
+                    );
+
+                    outputs.push("");
+                });
+
+                document
+                    .getElementById("output")
+                    .value =
+                    outputs.join("\n");
+
+            }
+
+            catch (e) {
+
+                document
+                    .getElementById("output")
+                    .value =
+                    "JSON lỗi:\n" +
+                    e.message;
+            }
+        }
+        function exportAccountBuildList(input) {
+
+            const objects = splitObjects(input);
+            const outputs = [];
+
+            objects.forEach(text => {
+
+                const obj = JSON.parse(text);
+
+                const accountId = accountMap[obj.tag];
+
+                if (accountId === undefined) {
+                    outputs.push(`// Không tìm thấy account ${obj.tag}`);
+                    return;
+                }
+
+                const buildMap = {};
+                const timeList = [];
+
+                addBuildingLevels(obj.buildings, buildMap);
+                addBuildingLevels(obj.heroes, buildMap);
+
+                addTimers(obj.buildings, obj.timestamp, timeList);
+                addTimers(obj.heroes, obj.timestamp, timeList);
+
+                // addUpgradeList(buildMap);
+
+                Object.entries(buildMap).forEach(([key, value]) => {
+                    outputs.push(
+                        `accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`
+                    );
+                });
+
+                outputs.push(
+                    `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`
+                );
+
+                outputs.push("");
+            });
+
+            return outputs.join("\n");
+        }
         function hasLabWasteWarning(obj) {
             const helperCooldown = obj.helpers?.[0]?.helper_cooldown || 0;
             if (!helperCooldown) return false;
@@ -370,12 +748,7 @@
                 else if (diff <= 10 * 60000) color = "#ffd166";
 
                 let timeCellContent = "";
-                if (diff <= 0) {
-                    // Khi hết thời gian → hiển thị nút
-                    timeCellContent = `<button class="reuse-btn" onclick="reuseEntry('${entry.id}')">🔁 Làm lại</button>`;
-                } else {
-                    timeCellContent = formatTimeRemaining(entry);
-                }
+                if (diff > 0) timeCellContent = formatTimeRemaining(entry);
                 row.innerHTML = `
         <td>${index + 1}</td>
         <td>${entry.dateString}</td>
@@ -438,18 +811,8 @@
             // removeEntry(id);
         }
         window.reuseEntry = reuseEntry;
-        input.addEventListener('keydown', (e) => {
-            const triggerKeys = ['Enter', 'Tab', 'NumpadEnter', 'Next', '.', 'NumpadDecimal'];
-            if (
-                triggerKeys.includes(e.key) ||
-                e.keyCode === 9 || e.keyCode === 13 || e.keyCode === 32 || e.key === '.'
-            ) {
-                e.preventDefault();
-                handleInput();
-            }
-        });
 
-        document.getElementById('addBtn').addEventListener('click', handleInput);
+
 
         filterSelect.addEventListener('change', () => {
             renderTable();
@@ -478,7 +841,7 @@
             if (!TOKEN) return alert("❌ Chưa nhập token!");
             try {
                 const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-                const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
+                const res = await fetch(url, {headers: {Authorization: `token ${TOKEN}`}});
                 if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
                 const data = await res.json();
                 const jsonText = atob(data.content.replace(/\n/g, ""));
@@ -499,7 +862,7 @@
         async function uploadToGitHub(content) {
             const token = await promptToken();
             const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-            const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
+            const res = await fetch(getUrl, {headers: {Authorization: `token ${token}`}});
             const data = await res.json();
             const sha = data.sha;
             const result = await fetch(getUrl, {
@@ -729,8 +1092,10 @@
             // LAB (units + spells + siege_machines)
             // =====================================================
 
+            const helper = obj.helpers?.find(h => h.lvl > 0);
+
             const helperCooldown =
-                obj.helpers?.[0]?.helper_cooldown || 0;
+                helper?.helper_cooldown ?? 0;
 
             const helperFinishTime =
                 baseTime +
@@ -863,16 +1228,8 @@
             // đang bật helper_recurrent
             // =====================================================
 
-            if (
-                helperCooldown > 0 &&
-                !hasRecurringHelper
-            ) {
-
-                addEntry(
-                    hall,
-                    "speed lab",
-                    helperFinishTime
-                );
+            if (!hasRecurringHelper) {
+                addEntry(hall, "speed lab", helperFinishTime);
             }
 
             // =====================================================
@@ -924,7 +1281,15 @@
 
             return objects;
         }
+        let exportedBuildList = "";
 
+        async function copyBuildList() {
+            await navigator.clipboard.writeText(exportedBuildList);
+
+            document.getElementById("cocInput").value = "";
+            document.getElementById("copyBuildBtn").style.display = "none";
+            exportedBuildList = "";
+        }
         function importCOC() {
 
             try {
@@ -974,7 +1339,10 @@
 
                 saveToStorage();
                 renderTable();
-
+                document.getElementById("copyBuildBtn").style.display = "";
+                exportedBuildList = exportAccountBuildList(
+                    document.getElementById("cocInput").value
+                );
                 alert(
                     `✅ Import thành công ${imported} account`
                 );
