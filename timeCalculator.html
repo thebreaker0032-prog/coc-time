@@ -1008,6 +1008,7 @@
 
             const clockTowerUpgrading =
                 !!clockTower?.timer;
+            const clockTowerBoost = obj.boosts?.clocktower_boost || 0;
             let wastedClockTowerBoost = false;
             const normalItems = [
                 ...(obj.buildings || []),
