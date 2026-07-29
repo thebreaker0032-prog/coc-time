@@ -640,7 +640,7 @@
                     if (speedBuilderCount) text += `⚡${pad(speedBuilderCount)} | `;
                     if (speedLabCount) text += `🚀${pad(speedLabCount)}`;
                     if (hallWarnings && hallWarnings[h.name]?.helperWaste) text += " 🚨";
-                    if (hallWarnings[h.name]?.labBoostWaste || hallWarnings[h.name]?.petBoostWaste || hallWarnings[h.name]?.builderBoostWaste || hallWarnings[h.name]?.labConsumableWaste || hallWarnings[h.name]?.builder10BoostWaste) text += " ⚠️";
+                    if (hallWarnings[h.name]?.labBoostWaste || hallWarnings[h.name]?.petBoostWaste || hallWarnings[h.name]?.builderBoostWaste || hallWarnings[h.name]?.labConsumableWaste || hallWarnings[h.name]?.builder10BoostWaste || hallWarnings[h.name]?.wastedClockTowerBoost) text += " ⚠️";
                     return `<option value="${h.name}">${text}</option>`;
                 }).join("");
             filterSelect.value = currentValue;
@@ -1006,14 +1006,9 @@
             const clockCooldown =
                 obj.boosts?.clocktower_cooldown || 0;
 
-            const clockLevel =
-                clockTower?.lvl || 0;
-
             const clockTowerUpgrading =
                 !!clockTower?.timer;
-
-            const clockReduceMinutes =
-                (clockLevel * 2 + 12) * 9;
+            let wastedClockTowerBoost = false;
             const normalItems = [
                 ...(obj.buildings || []),
                 ...(obj.traps || []),
@@ -1055,30 +1050,19 @@
 
                 let remaining = item.timer;
 
-                if (
-                    !clockTowerUpgrading &&
-                    clockCooldown > 0 &&
-                    clockReduceMinutes > 0
-                ) {
+                if (clockTowerBoost > 0) {
 
-                    let nextCooldown = clockCooldown;
+                    const finishDuringBoost =
+                        Math.ceil(remaining / 10);
 
-                    while (nextCooldown < remaining) {
-
-                        const remainAfterTrigger =
-                            remaining - nextCooldown;
-
-                        if (remainAfterTrigger < 7200) {
-                            break;
-                        }
-
-                        remaining -=
-                            clockReduceMinutes * 60;
-
-                        nextCooldown +=
-                            22 * 3600 +
-                            (12 + clockLevel * 2) * 60;
+                    if (finishDuringBoost < clockTowerBoost) {
+                        wastedClockTowerBoost = true;
                     }
+
+                    remaining = apply10xBoost(
+                        remaining,
+                        clockTowerBoost
+                    );
                 }
 
                 addEntry(
@@ -1222,6 +1206,7 @@
             hallWarnings[hall].petBoostWaste = wastedPetBoost;
             hallWarnings[hall].labConsumableWaste = wastedLabConsumable;
             hallWarnings[hall].builder10BoostWaste = wastedBuilder10Boost;
+            hallWarnings[hall].wastedClockTowerBoost = wastedClockTowerBoost;
             // =====================================================
             // SPEED LAB
             // Chỉ hiện nếu không có research nào
