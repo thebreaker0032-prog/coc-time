@@ -187,11 +187,22 @@
     </div>
 
     <script>
+        const accountMap = {
+            "#R2VCR0YY8": 0,
+            "#R80C9YCYV": 1,
+            "#R9V98P28Y": 2,
+            "#GUC8YLLCQ": 3,
+            "#GG99VG02P": 4,
+            "#GQQQ2QR02": 5,
+            "#R28PGJR2Q": 6,
+            "#R9RRL98JV": 7,
+            "#GG99VJGRP": 8,
+            "#R28Q9L9PP": 9
+        };
         const tableBody = document.querySelector('#resultTable tbody');
         const filterSelect = document.getElementById('filterSelect');
         let entries = [];
         const STORAGE_KEY = "time_entries_v3";
-        const halls = [{name: "1"}, {name: "2"}, {name: "3"}, {name: "4"}, {name: "5"}, {name: "6"}, {name: "7"}, {name: "8"}, {name: "9"}, {name: "10"}];
         const hallWarnings = {};
         const warningHalls = new Set();
         const buildingMap = {
@@ -235,50 +246,6 @@
             28000006: "prin",
             28000007: "duke"
         };
-
-        const accountMap = {
-            "#R2VCR0YY8": 0,
-            "#R80C9YCYV": 1,
-            "#R9V98P28Y": 2,
-            "#GUC8YLLCQ": 3,
-            "#GG99VG02P": 4,
-            "#GQQQ2QR02": 5,
-            "#R28PGJR2Q": 6,
-            "#R9RRL98JV": 7,
-            "#GG99VJGRP": 8,
-            "#R28Q9L9PP": 9
-        };
-
-        function splitObjects(text) {
-            const result = [];
-            let depth = 0;
-            let start = -1;
-            for (let i = 0; i < text.length; i++) {
-
-                if (text[i] === "{") {
-
-                    if (depth === 0) {
-                        start = i;
-                    }
-
-                    depth++;
-                }
-
-                else if (text[i] === "}") {
-
-                    depth--;
-
-                    if (depth === 0 && start !== -1) {
-
-                        result.push(
-                            text.substring(start, i + 1)
-                        );
-                    }
-                }
-            }
-
-            return result;
-        }
         const maxLevelByTH = {
             clan: [0, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
             army: [0, 1, 2, 3, 4, 5, 6, 6, 6, 7, 8, 9, 10, 11, 11, 12, 12, 12, 12],
@@ -309,53 +276,55 @@
             mul: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4],
             ric: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 3, 4]
         };
-
+        const halls = Object.values(accountMap0)
+            .sort((a, b) => a - b)
+            .map(val => ({name: String(val + 1)}));
+        function splitObjects(text) {
+            const result = [];
+            let depth = 0;
+            let start = -1;
+            for (let i = 0; i < text.length; i++) {
+                if (text[i] === "{") {
+                    if (depth === 0) {
+                        start = i;
+                    }
+                    depth++;
+                }
+                else if (text[i] === "}") {
+                    depth--;
+                    if (depth === 0 && start !== -1) {
+                        result.push(
+                            text.substring(start, i + 1)
+                        );
+                    }
+                }
+            }
+            return result;
+        }
         const upgradeTarget = {
             can: 4,
             rto: 4,
         };
-
         function addBuildingLevels(arr, map) {
-
             if (!Array.isArray(arr)) return;
-
             arr.forEach(item => {
-
-                const name =
-                    buildingMap[item.data];
-
+                const name = buildingMap[item.data];
                 if (!name) return;
-
-                // Town Hall
                 if (item.data === 1000001) {
-
                     map[name] = item.lvl;
                     return;
                 }
-
-                // Có cnt
                 if (item.cnt != null) {
-
                     if (!map[name]) {
                         map[name] = [];
                     }
-
-                    for (
-                        let i = 0;
-                        i < item.cnt;
-                        i++
-                    ) {
+                    for (let i = 0; i < item.cnt; i++) {
                         map[name].push(
                             item.lvl || 0
                         );
                     }
-
                     return;
                 }
-
-                // Không có cnt
-                // chỉ tạo [] nếu lvl > 0
-                // Hero
                 if (item.data >= 28000000 && item.data <= 28000007) {
                     if (item.timer) {
                         map[name] = [];
@@ -366,158 +335,59 @@
                 }
             });
         }
-
-        function addTimers(
-            arr,
-            timestamp,
-            result
-        ) {
-
+        function addTimers(arr, timestamp, result) {
             if (!Array.isArray(arr)) return;
-
             arr.forEach(item => {
-
                 if (!item.timer) return;
-
-                const name =
-                    buildingMap[item.data];
-
+                const name = buildingMap[item.data];
                 if (!name) return;
-
-                result.push([
-                    name,
-                    String(
-                        (timestamp + item.timer)
-                        * 1000
-                    ),
-                    (item.lvl || 0) + 1
-                ]);
+                result.push([name, String((timestamp + item.timer) * 1000), (item.lvl || 0) + 1]);
             });
         }
         function addUpgradeList(buildMap) {
-
             const th = buildMap.town || 1;
-
             const upgradeList = [];
-
             Object.entries(upgradeTarget).forEach(([name, count]) => {
-
                 const levels = buildMap[name];
-
-                if (!Array.isArray(levels)) {
-                    return;
-                }
-
+                if (!Array.isArray(levels)) return;
                 const table = maxLevelByTH[name];
-
-                if (!table) {
-                    return;
-                }
-
-                const maxLevel =
-                    table[Math.min(th, table.length - 1)];
-
-                if (maxLevel <= 0) {
-                    return;
-                }
-
-                // Chỉ lấy các công trình CHƯA MAX
-                const selectLevels = [...levels]
-                    .filter(level => level < maxLevel)
-                    .sort((a, b) => b - a)
-                    .slice(0, count);
-
+                if (!table) return;
+                const maxLevel = table[Math.min(th, table.length - 1)];
+                if (maxLevel <= 0) return;
+                const selectLevels = [...levels].filter(level => level < maxLevel).sort((a, b) => b - a).slice(0, count);
                 selectLevels.forEach(level => {
-
-                    for (
-                        let lv = level + 1;
-                        lv <= maxLevel;
-                        lv++
-                    ) {
-
-                        upgradeList.push(
-                            `${name}-${lv}`
-                        );
+                    for (let lv = level + 1; lv <= maxLevel; lv++) {
+                        upgradeList.push(`${name}-${lv}`);
                     }
-
                 });
-
             });
-
             buildMap.upgrade = upgradeList;
         }
         function exportTime() {
-
             try {
-
-                const input =
-                    document
-                        .getElementById("input")
-                        .value
-                        .trim();
-
-                const objects =
-                    splitObjects(input);
-
+                const input = document.getElementById("input").value.trim();
+                const objects = splitObjects(input);
                 const outputs = [];
-
                 objects.forEach(text => {
+                    const obj = JSON.parse(text);
+                    const accountId = accountMap[obj.tag] + 1;
 
-                    const obj =
-                        JSON.parse(text);
-
-                    const accountId =
-                        accountMap[obj.tag] + 1;
-
-                    if (
-                        accountId === undefined
-                    ) {
-
-                        outputs.push(
-                            `// Không tìm thấy account ${obj.tag}`
-                        );
-
+                    if (accountId === undefined) {
+                        outputs.push(`// Không tìm thấy account ${obj.tag}`);
                         return;
                     }
-
                     const buildMap = {};
                     const timeList = [];
-
-                    addBuildingLevels(
-                        obj.buildings,
-                        buildMap
-                    );
-                    addBuildingLevels(
-                        obj.heroes,
-                        buildMap
-                    );
-                    addTimers(
-                        obj.buildings,
-                        obj.timestamp,
-                        timeList
-                    );
-                    addTimers(
-                        obj.heroes,
-                        obj.timestamp,
-                        timeList
-                    );
-                    Object.entries(buildMap)
-                        .forEach(
-                            ([key, value]) => {
-
-                                outputs.push(
-                                    `accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`
-                                );
-                            }
-                        );
-
-                    outputs.push(
-                        `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`
-                    );
-
+                    addBuildingLevels(obj.buildings, buildMap);
+                    addBuildingLevels(obj.heroes, buildMap);
+                    addTimers(obj.buildings, obj.timestamp, timeList);
+                    addTimers(obj.heroes, obj.timestamp, timeList);
+                    Object.entries(buildMap).forEach(([key, value]) => {
+                        outputs.push(`accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`);
+                    });
+                    outputs.push(`accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`);
                     outputs.push("");
                 });
-
                 document
                     .getElementById("output")
                     .value =
@@ -1322,8 +1192,8 @@
                 exportedBuildList = exportAccountBuildList(
                     document.getElementById("cocInput").value
                 );
-              const data = JSON.stringify(entries, null, 2)
-              uploadToGitHub(data)
+                const data = JSON.stringify(entries, null, 2)
+                uploadToGitHub(data)
                 alert(
                     `✅ Import thành công ${imported} account`
                 );
