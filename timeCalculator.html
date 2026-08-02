@@ -191,7 +191,6 @@
         const filterSelect = document.getElementById('filterSelect');
         let entries = [];
         const STORAGE_KEY = "time_entries_v3";
-        const accountMap = {"#R2VCR0YY8": "1", "#GCL0UCPYU": "2", "#R9RRYVJLY": "3", "#GUC8YLLCQ": "4", "#GG99VG02P": "5", "#GQQQ2QR02": "6", "#R28PGJR2Q": "7", "#R9RRL98JV": "8", "#GG99VJGRP": "9", "#R28Q9L9PP": "10"};
         const halls = [{name: "1"}, {name: "2"}, {name: "3"}, {name: "4"}, {name: "5"}, {name: "6"}, {name: "7"}, {name: "8"}, {name: "9"}, {name: "10"}];
         const hallWarnings = {};
         const warningHalls = new Set();
@@ -237,7 +236,7 @@
             28000007: "duke"
         };
 
-        const accountMap0 = {
+        const accountMap = {
             "#R2VCR0YY8": 0,
             "#GCL0UCPYU": 1,
             "#R9RRYVJLY": 2,
@@ -474,7 +473,7 @@
                         JSON.parse(text);
 
                     const accountId =
-                        accountMap0[obj.tag];
+                        accountMap[obj.tag] + 1;
 
                     if (
                         accountId === undefined
@@ -550,7 +549,7 @@
 
                 const obj = JSON.parse(text);
 
-                const accountId = accountMap0[obj.tag];
+                const accountId = accountMap[obj.tag] + 1;
 
                 if (accountId === undefined) {
                     outputs.push(`// Không tìm thấy account ${obj.tag}`);
@@ -958,7 +957,7 @@
             return remaining;
         }
         function processCOCObject(obj) {
-            const hall = accountMap[obj.tag];
+            const hall = accountMap[obj.tag] + 1;
 
             warningHalls.delete(hall);
             const builderBoost = obj.boosts?.builder_consumable || 0;
