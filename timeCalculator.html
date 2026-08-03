@@ -706,72 +706,67 @@
         loadFromStorage();
 
         // --- GitHub Sync ---
-        const GITHUB_USER = "thebreaker0032-prog";
-        const REPO_NAME = "thebreaker";
-        const FILE_PATH = "time-tracker-data.json";
+        // --- JSONBIN.IO SYNC ---
+        const JSONBIN_BIN_ID = "6a70831dda38895dfeb36912";
+        const JSONBIN_API_KEY = "$2a$10$ZKZtBHXtxYDUw3kimsoamOY4kR9CMiSIHJdGt7OM85GlbcSHDZX3e";
 
-        async function promptToken() {
-            let token = localStorage.getItem("GITHUB_TOKEN");
-            if (!token) {
-                token = prompt("🔑 Nhập GitHub Token cá nhân của bạn (PAT):");
-                if (token) localStorage.setItem("GITHUB_TOKEN", token);
-            }
-            return token;
-        }
+        async function loadFromJSONBin() {
+            if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) return alert("❌ Chưa cấu hình API Key hoặc Bin ID!");
 
-        async function loadFromGitHub() {
-            const TOKEN = await promptToken();
-            if (!TOKEN) return alert("❌ Chưa nhập token!");
             try {
-                const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-                const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
+                // Tham số /latest đảm bảo luôn lấy bản cập nhật mới nhất
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    method: "GET",
+                    headers: {
+                        "X-Access-Key": JSONBIN_API_KEY
+                    }
+                });
+
                 if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
+
                 const data = await res.json();
-                const jsonText = atob(data.content.replace(/\n/g, ""));
-                entries = JSON.parse(jsonText);
+
+                // JSONBin luôn bọc dữ liệu thực tế bên trong object 'record'
+                entries = data.record;
+
                 renderTable();
                 saveToStorage();
-                alert("✅ Đã tải dữ liệu từ GitHub!");
+                alert("✅ Đã tải dữ liệu từ JSONBin!");
             } catch (err) {
                 console.error(err);
                 alert("❌ Lỗi khi tải dữ liệu: " + err.message);
-                if (err.message.includes("401")) {
-                    localStorage.removeItem("GITHUB_TOKEN");
-                    alert("🔄 Token có thể sai hoặc hết hạn. Hãy thử tải lại và nhập token mới.");
+            }
+        }
+
+        async function uploadToJSONBin(content) {
+            try {
+                const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: "PUT",
+                    headers: {
+                        "X-Access-Key": JSONBIN_API_KEY,
+                        "Content-Type": "application/json",
+                    },
+                    body: content, // content đã là JSON string (được gọi từ JSON.stringify(entries))
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert(`❌ Lỗi upload: ${res.status} - ${err.message}`);
+                } else {
+                    console.log("✅ Đã cập nhật lên JSONBin thành công!");
                 }
+            } catch (err) {
+                console.error(err);
+                alert("❌ Lỗi mạng: " + err.message);
             }
         }
 
-        async function uploadToGitHub(content) {
-            const token = await promptToken();
-            const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-            const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
-            const data = await res.json();
-            const sha = data.sha;
-            const result = await fetch(getUrl, {
-                method: "PUT",
-                headers: {
-                    "Authorization": `token ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    message: "Update time tracker data",
-                    content: btoa(unescape(encodeURIComponent(content))),
-                    sha: sha
-                }),
-            });
-            if (!result.ok) {
-                const err = await result.json();
-                alert(`❌ Lỗi upload: ${result.status} - ${err.message}`);
-            } else {
-                alert("✅ Đã cập nhật file thành công!");
-            }
-        }
-
-        document.getElementById("loadGitHubBtn").addEventListener("click", loadFromGitHub);
+        // Gắn sự kiện cho các nút bấm cũ (Nhớ đổi ID nút hoặc tái sử dụng ID cũ)
+        document.getElementById("loadGitHubBtn").addEventListener("click", loadFromJSONBin);
         document.getElementById("uploadGitHubBtn").addEventListener("click", async () => {
             const data = JSON.stringify(entries, null, 2);
-            await uploadToGitHub(data);
+            await uploadToJSONBin(data);
+            alert("✅ Đã lưu thủ công lên máy chủ JSONBin!");
         });
         document.getElementById("resetTokenBtn").addEventListener("click", () => {
             localStorage.removeItem("GITHUB_TOKEN");
@@ -1212,8 +1207,8 @@
                 exportedBuildList = exportAccountBuildList(
                     document.getElementById("cocInput").value
                 );
-                const data = JSON.stringify(entries, null, 2)
-                uploadToGitHub(data)
+                const data = JSON.stringify(entries, null, 2);
+                uploadToJSONBin(data);
                 alert(
                     `✅ Import thành công ${imported} account`
                 );
