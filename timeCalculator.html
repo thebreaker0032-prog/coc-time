@@ -188,36 +188,36 @@
 
     <script>
         const accountMap = {
-          "#RPGCPYUJR": 0,
-"#GULR2CV0C": 1,
-"#R8YL9R2PC": 2,
-"#R8Y20CP2C": 3,
-"#R82QQU9QU": 4,
-        #R8YLRRQYY
-#RPG9YVY9P
-#RPP99Q0QL
-#R820V8RU9
-#R8222QCRL
-#R0QGCCR2C
-#GGUVJ9Y0Y
-#R8PCQJJYP
-#GUPUCY0PR
-#R820VCV8Q
-#R820VVPJC
-#RPGCU0LPR
-#GGL80VL98
-#R0G0V220G
-#RPGUJPG2V
-#R2C9VQ0QP
-#R0JYC8U8P
-#R2YVJYL8L
-#GUPGVQ2QU
-#RPPQCPUQ0
-#GJ20Q88LR
-#R8222PQCR
-#RPG9GLLPJ
-#GVRU2JGVY
-#R9VLVG0V0    
+            "#RPGCPYUJR": 0,
+            "#GULR2CV0C": 1,
+            "#R8YL9R2PC": 2,
+            "#R8Y20CP2C": 3,
+            "#R82QQU9QU": 4,
+            "#R8YLRRQYY": 5,
+            "#RPG9YVY9P": 6,
+            "#RPP99Q0QL": 7,
+            "#R820V8RU9": 8,
+            "#R8222QCRL": 9,
+            "#R0QGCCR2C": 10,
+            "#GGUVJ9Y0Y": 11,
+            "#R8PCQJJYP": 12,
+            "#GUPUCY0PR": 13,
+            "#R820VCV8Q": 14,
+            "#R820VVPJC": 15,
+            "#RPGCU0LPR": 16,
+            "#GGL80VL98": 17,
+            "#R0G0V220G": 18,
+            "#RPGUJPG2V": 19,
+            "#R2C9VQ0QP": 20,
+            "#R0JYC8U8P": 21,
+            "#R2YVJYL8L": 22,
+            "#GUPGVQ2QU": 23,
+            "#RPPQCPUQ0": 24,
+            "#GJ20Q88LR": 25,
+            "#R8222PQCR": 26,
+            "#RPG9GLLPJ": 27,
+            "#GVRU2JGVY": 28,
+            "#R9VLVG0V0": 29,
         };
         const tableBody = document.querySelector('#resultTable tbody');
         const filterSelect = document.getElementById('filterSelect');
@@ -298,7 +298,7 @@
         };
         const halls = Object.values(accountMap)
             .sort((a, b) => a - b)
-            .map(val => ({name: String(val + 1)}));
+            .map(val => ({ name: String(val + 1) }));
         function splitObjects(text) {
             const result = [];
             let depth = 0;
@@ -724,7 +724,7 @@
             if (!TOKEN) return alert("❌ Chưa nhập token!");
             try {
                 const url = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-                const res = await fetch(url, {headers: {Authorization: `token ${TOKEN}`}});
+                const res = await fetch(url, { headers: { Authorization: `token ${TOKEN}` } });
                 if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
                 const data = await res.json();
                 const jsonText = atob(data.content.replace(/\n/g, ""));
@@ -745,7 +745,7 @@
         async function uploadToGitHub(content) {
             const token = await promptToken();
             const getUrl = `https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${FILE_PATH}`;
-            const res = await fetch(getUrl, {headers: {Authorization: `token ${token}`}});
+            const res = await fetch(getUrl, { headers: { Authorization: `token ${token}` } });
             const data = await res.json();
             const sha = data.sha;
             const result = await fetch(getUrl, {
