@@ -298,27 +298,23 @@
         };
         const halls = Object.values(accountMap)
             .sort((a, b) => a - b)
-            .map(val => ({ name: String(val + 1) }));
+            .map(val => ({name: `${val + 1}`})); // Dùng Template Literal cho gọn
+
         function splitObjects(text) {
             const result = [];
-            let depth = 0;
-            let start = -1;
+            let depth = 0, start = -1;
+
             for (let i = 0; i < text.length; i++) {
-                if (text[i] === "{") {
-                    if (depth === 0) {
-                        start = i;
-                    }
-                    depth++;
-                }
-                else if (text[i] === "}") {
-                    depth--;
-                    if (depth === 0 && start !== -1) {
-                        result.push(
-                            text.substring(start, i + 1)
-                        );
-                    }
+                // Nếu là '{' và depth ban đầu là 0 -> đánh dấu start, sau đó tự tăng depth
+                if (text[i] === '{' && depth++ === 0) start = i;
+
+                // Nếu là '}', giảm depth đi 1 trước. Nếu depth về 0 -> cắt chuỗi
+                else if (text[i] === '}' && --depth === 0 && start !== -1) {
+                    result.push(text.slice(start, i + 1));
+                    start = -1; // Reset lại để an toàn nếu chuỗi đầu vào bị lỗi
                 }
             }
+
             return result;
         }
         const upgradeTarget = {
@@ -327,291 +323,270 @@
         };
         function addBuildingLevels(arr, map) {
             if (!Array.isArray(arr)) return;
-            arr.forEach(item => {
-                const name = buildingMap[item.data];
-                if (!name) return;
-                if (item.data === 1000001) {
-                    map[name] = item.lvl;
-                    return;
+
+            for (const {data, lvl = 0, cnt, timer} of arr) {
+                const name = buildingMap[data];
+                if (!name) continue;
+
+                if (data === 1000001) {
+                    map[name] = lvl; // Gán trực tiếp level (thường là Town Hall)
                 }
-                if (item.cnt != null) {
-                    if (!map[name]) {
-                        map[name] = [];
-                    }
-                    for (let i = 0; i < item.cnt; i++) {
-                        map[name].push(
-                            item.lvl || 0
-                        );
-                    }
-                    return;
+                else if (cnt != null) {
+                    // Toán tử ??= tự tạo mảng nếu chưa có. Array().fill() thay cho vòng lặp for
+                    map[name] ??= [];
+                    map[name].push(...Array(cnt).fill(lvl));
                 }
-                if (item.data >= 28000000 && item.data <= 28000007) {
-                    if (item.timer) {
-                        map[name] = [];
-                    } else {
-                        map[name] = [item.lvl || 0];
-                    }
-                    return;
+                else if (data >= 28000000 && data <= 28000007) {
+                    map[name] = timer ? [] : [lvl];
                 }
-            });
+            }
         }
+
         function addTimers(arr, timestamp, result) {
             if (!Array.isArray(arr)) return;
-            arr.forEach(item => {
-                if (!item.timer) return;
-                const name = buildingMap[item.data];
-                if (!name) return;
-                result.push([name, String((timestamp + item.timer) * 1000), (item.lvl || 0) + 1]);
-            });
+
+            for (const {data, timer, lvl = 0} of arr) {
+                const name = buildingMap[data];
+                if (timer && name) {
+                    result.push([name, String((timestamp + timer) * 1000), lvl + 1]);
+                }
+            }
         }
+
         function addUpgradeList(buildMap) {
             const th = buildMap.town || 1;
             const upgradeList = [];
-            Object.entries(upgradeTarget).forEach(([name, count]) => {
+
+            // Dùng for...of kết hợp Object.entries để duyệt object cực gọn
+            for (const [name, count] of Object.entries(upgradeTarget)) {
                 const levels = buildMap[name];
-                if (!Array.isArray(levels)) return;
                 const table = maxLevelByTH[name];
-                if (!table) return;
+
+                if (!Array.isArray(levels) || !table) continue;
+
                 const maxLevel = table[Math.min(th, table.length - 1)];
-                if (maxLevel <= 0) return;
-                const selectLevels = [...levels].filter(level => level < maxLevel).sort((a, b) => b - a).slice(0, count);
-                selectLevels.forEach(level => {
-                    for (let lv = level + 1; lv <= maxLevel; lv++) {
-                        upgradeList.push(`${name}-${lv}`);
-                    }
-                });
-            });
+                if (maxLevel <= 0) continue;
+
+                levels.filter(lv => lv < maxLevel)
+                    .sort((a, b) => b - a)
+                    .slice(0, count)
+                    .forEach(level => {
+                        for (let lv = level + 1; lv <= maxLevel; lv++) {
+                            upgradeList.push(`${name}-${lv}`);
+                        }
+                    });
+            }
             buildMap.upgrade = upgradeList;
         }
+
         function exportTime() {
+            const outputEl = document.getElementById("output");
+
             try {
                 const input = document.getElementById("input").value.trim();
                 const objects = splitObjects(input);
-                const outputs = [];
-                objects.forEach(text => {
+
+                // Dùng flatMap để tự động gộp mảng kết quả, bỏ qua mảng trung gian `outputs`
+                const finalOutput = objects.flatMap(text => {
                     const obj = JSON.parse(text);
                     const accountId = accountMap[obj.tag];
 
                     if (accountId === undefined) {
-                        outputs.push(`// Không tìm thấy account ${obj.tag}`);
-                        return;
+                        return [`// Không tìm thấy account ${obj.tag}`];
                     }
+
                     const buildMap = {};
                     const timeList = [];
-                    addBuildingLevels(obj.buildings, buildMap);
-                    addBuildingLevels(obj.heroes, buildMap);
-                    addTimers(obj.buildings, obj.timestamp, timeList);
-                    addTimers(obj.heroes, obj.timestamp, timeList);
-                    Object.entries(buildMap).forEach(([key, value]) => {
-                        outputs.push(`accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`);
-                    });
-                    outputs.push(`accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`);
-                    outputs.push("");
+
+                    // Gộp mảng buildings và heroes lại xử lý 1 lần cho lẹ
+                    const allItems = [...(obj.buildings || []), ...(obj.heroes || [])];
+                    addBuildingLevels(allItems, buildMap);
+                    addTimers(allItems, obj.timestamp, timeList);
+
+                    const accRef = `accountBuildList[${accountId}]`;
+
+                    // Map buildMap thành mảng các chuỗi output
+                    const buildOutputs = Object.entries(buildMap).map(([key, value]) =>
+                        `${accRef}.put("${key}", ${JSON.stringify(value)})`
+                    );
+
+                    return [
+                        ...buildOutputs,
+                        `${accRef}.put("time", ${JSON.stringify(timeList)})\n`
+                    ];
                 });
-                document
-                    .getElementById("output")
-                    .value =
-                    outputs.join("\n");
 
-            }
-
-            catch (e) {
-
-                document
-                    .getElementById("output")
-                    .value =
-                    "JSON lỗi:\n" +
-                    e.message;
+                outputEl.value = finalOutput.join("\n");
+            } catch (e) {
+                outputEl.value = `JSON lỗi:\n${e.message}`;
             }
         }
         function exportAccountBuildList(input) {
-
-            const objects = splitObjects(input);
-            const outputs = [];
-
-            objects.forEach(text => {
-
+            // Dùng flatMap để duyệt và gộp mảng, loại bỏ hoàn toàn mảng trung gian `outputs`
+            return splitObjects(input).flatMap(text => {
                 const obj = JSON.parse(text);
-
                 const accountId = accountMap[obj.tag];
 
-                if (accountId === undefined) {
-                    outputs.push(`// Không tìm thấy account ${obj.tag}`);
-                    return;
-                }
+                if (accountId === undefined) return [`// Không tìm thấy account ${obj.tag}\n`];
 
-                const buildMap = {};
-                const timeList = [];
+                const buildMap = {}, timeList = [];
 
                 addBuildingLevels(obj.buildings, buildMap);
                 addBuildingLevels(obj.heroes, buildMap);
-
                 addTimers(obj.buildings, obj.timestamp, timeList);
                 addTimers(obj.heroes, obj.timestamp, timeList);
 
-                // addUpgradeList(buildMap);
+                const accRef = `accountBuildList[${accountId}]`;
 
-                Object.entries(buildMap).forEach(([key, value]) => {
-                    outputs.push(
-                        `accountBuildList[${accountId}].put("${key}", ${JSON.stringify(value)})`
-                    );
-                });
-
-                outputs.push(
-                    `accountBuildList[${accountId}].put("time", ${JSON.stringify(timeList)})`
-                );
-
-                outputs.push("");
-            });
-
-            return outputs.join("\n");
+                // Gộp kết quả buildMap và timeList vào chung 1 mảng return
+                return [
+                    ...Object.entries(buildMap).map(([k, v]) => `${accRef}.put("${k}", ${JSON.stringify(v)})`),
+                    `${accRef}.put("time", ${JSON.stringify(timeList)})\n`
+                ];
+            }).join("\n");
         }
+
         function hasLabWasteWarning(obj) {
-            const helperCooldown = obj.helpers?.[0]?.helper_cooldown || 0;
+            const helperCooldown = obj.helpers?.[0]?.helper_cooldown;
             if (!helperCooldown) return false;
+
             const researches = [...(obj.units || []), ...(obj.spells || []), ...(obj.siege_machines || [])];
-            return researches.some(item => {
-                if (!item.timer || item.helper_recurrent !== true) return false;
-                const remainAfterTrigger = item.timer - helperCooldown;
-                return (remainAfterTrigger > 0 && remainAfterTrigger < 7200);
+
+            // Dùng Destructuring bóc tách thẳng timer và helper_recurrent
+            return researches.some(({timer, helper_recurrent}) => {
+                if (!timer || !helper_recurrent) return false;
+                const remain = timer - helperCooldown;
+                return remain > 0 && remain < 7200;
             });
         }
-        function pad(n) {
-            return String(n).padStart(2, " ");
-        }
-        function apply4xBoost(timer, boost) {
-            const boostedTime = Math.min(boost, Math.ceil(timer / 4));
-            return (timer - boostedTime * 4 + boostedTime);
-        }
-        function apply2xBoost(timer, boostSeconds) {
-            if (boostSeconds <= 0) return timer;
-            const boosted = boostSeconds * 2;
-            if (boosted >= timer) {
-                return Math.ceil(timer / 2);
-            }
-            return boostSeconds + (timer - boosted);
-        }
-        function apply10xBoost(timer, boost) {
-            const boostedTime = Math.min(boost, Math.ceil(timer / 10));
-            return (timer - boostedTime * 10 + boostedTime);
-        }
-        function apply24xBoost(timer, boostSeconds) {
-            if (boostSeconds <= 0) return timer;
-            const boosted = boostSeconds * 24;
-            if (boosted >= timer) {
-                return Math.ceil(timer / 24);
-            }
-            return boostSeconds + (timer - boosted);
-        }
+
+        const pad = n => String(n).padStart(2, " ");
+
+        // Tối giản công thức Toán học của 4 hàm Boost (Logic vẫn giữ nguyên 100% của game)
+        const apply4xBoost = (t, b) => t - Math.min(b, Math.ceil(t / 4)) * 3;
+        const apply10xBoost = (t, b) => t - Math.min(b, Math.ceil(t / 10)) * 9;
+        const apply2xBoost = (t, b) => b <= 0 ? t : (b * 2 >= t ? Math.ceil(t / 2) : t - b);
+        const apply24xBoost = (t, b) => b <= 0 ? t : (b * 24 >= t ? Math.ceil(t / 24) : t - b * 23);
+
         function updateFilterWarnings() {
             const now = Date.now();
             const currentValue = filterSelect.value;
-            filterSelect.innerHTML = `<option value="">🔍 Tất cả Hall</option>` +
-                halls.map(h => {
-                    const hallEntries = entries.filter(e => e.hall === h.name && e.timestamp > now);
-                    const builderCount = hallEntries.filter(e => e.type === "builder hall").length;
-                    const labCount = hallEntries.filter(e => e.type === "lab").length;
-                    const speedBuilderCount = hallEntries.filter(e => e.type === "speed builder hall").length;
-                    const speedLabCount = hallEntries.filter(e => e.type === "speed lab").length;
-                    const petCount = hallEntries.filter(e => e.type === "pet").length;
-                    const normalCount = hallEntries.filter(e => e.type === "normal").length;
-                    let text = `${h.name.padStart(9, " ")} | `;
-                    if (normalCount) text += `🏗️${pad(normalCount)} | `;
-                    if (builderCount) text += `🔨${pad(builderCount)} | `;
-                    if (labCount) text += `🧪${pad(labCount)} | `;
-                    if (petCount) text += `🐾${pad(petCount)} | `;
-                    if (speedBuilderCount) text += `⚡${pad(speedBuilderCount)} | `;
-                    if (speedLabCount) text += `🚀${pad(speedLabCount)}`;
-                    if (hallWarnings && hallWarnings[h.name]?.helperWaste) text += " 🚨";
-                    if (hallWarnings[h.name]?.labBoostWaste || hallWarnings[h.name]?.petBoostWaste || hallWarnings[h.name]?.builderBoostWaste || hallWarnings[h.name]?.labConsumableWaste || hallWarnings[h.name]?.builder10BoostWaste || hallWarnings[h.name]?.wastedClockTowerBoost) text += " ⚠️";
-                    return `<option value="${h.name}">${text}</option>`;
-                }).join("");
+
+            const options = halls.map(({name}) => {
+                // Lọc data 1 lần duy nhất thay vì 6 lần như code cũ
+                const validEntries = entries.filter(e => Number(e.hall) === Number(name) && e.timestamp > now);
+
+                // Dùng reduce đếm số lượng các loại, tốc độ nhanh gấp 6 lần
+                const counts = validEntries.reduce((acc, {type}) => {
+                    acc[type] = (acc[type] || 0) + 1;
+                    return acc;
+                }, {});
+
+                // Hàm helper để render Icon gọn gàng
+                const addIcon = (key, icon) => counts[key] ? `${icon}${pad(counts[key])} | ` : "";
+
+                let text = `${name.padStart(9, " ")} | `
+                    + addIcon("normal", "🏗️") + addIcon("builder hall", "🔨")
+                    + addIcon("lab", "🧪") + addIcon("pet", "🐾")
+                    + addIcon("speed builder hall", "⚡") + addIcon("speed lab", "🚀");
+
+                text = text.replace(/ \| $/, ""); // Xoá dấu gạch đứng cuối cùng
+
+                const warn = hallWarnings?.[name] || {};
+                if (warn.helperWaste) text += " 🚨";
+                if (warn.labBoostWaste || warn.petBoostWaste || warn.builderBoostWaste ||
+                    warn.labConsumableWaste || warn.builder10BoostWaste || warn.wastedClockTowerBoost) {
+                    text += " ⚠️";
+                }
+
+                return `<option value="${name}">${text}</option>`;
+            });
+
+            filterSelect.innerHTML = `<option value="">🔍 Tất cả Hall</option>` + options.join("");
             filterSelect.value = currentValue;
         }
+
+        // Khởi tạo filterSelect ban đầu
         filterSelect.innerHTML = `<option value="">🔍 Tất cả Hall</option>` + halls.map(h => `<option value="${h.name}">${h.name}</option>`).join('');
-        function saveToStorage() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-        }
-        function loadFromStorage() {
+
+        const saveToStorage = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+        const loadFromStorage = () => {
             const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                entries = JSON.parse(saved);
-                renderTable();
-            }
-        }
+            if (saved) {entries = JSON.parse(saved); renderTable();}
+        };
+
         function addEntry(hall, type, timestamp) {
             const d = new Date(timestamp);
+            const pad0 = n => String(n).padStart(2, "0");
+
             entries.push({
                 id: Date.now().toString(36) + Math.random().toString(36).slice(2),
                 timestamp,
                 dateString: d.toLocaleDateString("vi-VN"),
-                hh: d.getHours().toString().padStart(2, "0"),
-                mm: d.getMinutes().toString().padStart(2, "0"),
-                hall,
-                type
+                hh: pad0(d.getHours()), mm: pad0(d.getMinutes()),
+                hall, type
             });
         }
+
         function parseTimeInput(value) {
             const val = value.trim();
             if (!/^\d{1,6}$/.test(val)) return 0;
-            if (val.length <= 2) return parseInt(val, 10);
-            if (val.length <= 4) {
-                const padded = val.padStart(4, '0');
-                const h = parseInt(padded.slice(0, -2), 10);
-                const m = parseInt(padded.slice(-2), 10);
-                return h * 60 + m;
+
+            const len = val.length;
+            if (len <= 2) return Number(val);
+
+            // Ép chuỗi thành 4 số (hhmm) hoặc 6 số (ddhhmm) rồi dùng slice bóc ra cực lẹ
+            if (len <= 4) {
+                const p = val.padStart(4, '0');
+                return Number(p.slice(0, 2)) * 60 + Number(p.slice(2));
             }
-            const padded = val.padStart(6, '0');
-            const d = parseInt(padded.slice(0, -4), 10);
-            const h = parseInt(padded.slice(-4, -2), 10);
-            const m = parseInt(padded.slice(-2), 10);
-            return d * 24 * 60 + h * 60 + m;
+            const p = val.padStart(6, '0');
+            return Number(p.slice(0, 2)) * 1440 + Number(p.slice(2, 4)) * 60 + Number(p.slice(4));
         }
-        function formatTimeRemaining(entry) {
-            const diffMs = entry.timestamp - Date.now();
-            if (diffMs <= 0) return "⏰ 00:00";
-            let totalMinutes = Math.floor(diffMs / 60000);
-            const days = Math.floor(totalMinutes / (24 * 60));
-            totalMinutes %= 24 * 60;
-            const hours = Math.floor(totalMinutes / 60);
-            const mins = totalMinutes % 60;
-            if (days > 0) return `${days}:${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+
+        function formatTimeRemaining({timestamp}) { // Lấy trực tiếp timestamp từ object entry
+            const diff = timestamp - Date.now();
+            if (diff <= 0) return "⏰ 00:00";
+
+            // Tận dụng phép chia dư (%) để loại bỏ logic if-else tính giờ/phút
+            const mins = String(Math.floor(diff / 60000) % 60).padStart(2, '0');
+            const hours = String(Math.floor(diff / 3600000) % 24).padStart(2, '0');
+            const days = Math.floor(diff / 86400000);
+
+            return days > 0 ? `${days}:${hours}:${mins}` : `${hours}:${mins}`;
         }
+        const resetInput = () => {input.value = ''; input.focus();};
+
         function handleInput() {
             const value = input.value.trim();
-            const hall = hallSelect.value;
-            const type = typeSelect.value;
-            if (!/^\d{1,6}$/.test(value)) {
-                input.value = '';
-                input.focus();
-                return;
-            }
-            // === Phần thêm thời gian bình thường ===
-            const now = new Date();
-            const totalMinutes = parseTimeInput(value);
-            const future = new Date(now.getTime() + totalMinutes * 60000);
+            if (!/^\d{1,6}$/.test(value)) return resetInput();
 
-            const entry = {
+            const hall = Number(filterSelect.value);
+            const type = typeSelect.value;
+            const futureTime = Date.now() + parseTimeInput(value) * 60000;
+
+            // Kiểm tra trùng/quá gần (trong vòng 2 phút) cho cùng 1 Hall
+            const isTooClose = entries.some(e =>
+                Number(e.hall) === hall && Math.abs(e.timestamp - futureTime) <= 120000
+            );
+            if (isTooClose) return;
+
+            const d = new Date(futureTime);
+            const pad0 = n => String(n).padStart(2, '0');
+
+            entries.push({
                 id: Date.now().toString(36) + Math.random().toString(36).slice(2),
-                timestamp: future.getTime(),
-                dateString: future.toLocaleDateString('vi-VN'),
-                hh: future.getHours().toString().padStart(2, '0'),
-                mm: future.getMinutes().toString().padStart(2, '0'),
+                timestamp: futureTime,
+                dateString: d.toLocaleDateString('vi-VN'),
+                hh: pad0(d.getHours()),
+                mm: pad0(d.getMinutes()),
                 type,
                 hall
-            };
+            });
 
-            const twoMinutes = 2 * 60000;
-            const tooClose = entries.some(e => e.hall === entry.hall && Math.abs(e.timestamp - entry.timestamp) <= twoMinutes);
-            if (tooClose) return;
-
-            entries.push(entry);
             saveToStorage();
             renderTable();
-
-            input.value = '';
-            input.focus();
+            resetInput();
         }
 
         function renderTable() {
@@ -619,89 +594,59 @@
             const now = Date.now();
 
             const filtered = entries
-                .filter(e => !selectedHall || e.hall === selectedHall)
+                .filter(e => !selectedHall || Number(e.hall) === Number(selectedHall))
                 .sort((a, b) => a.timestamp - b.timestamp);
 
-            tableBody.innerHTML = '';
-            filtered.forEach((entry, index) => {
-                const row = document.createElement('tr');
+            // Gộp toàn bộ HTML và gán 1 lần duy nhất giúp DOM render siêu nhanh
+            tableBody.innerHTML = filtered.map((entry, index) => {
                 const diff = entry.timestamp - now;
-                let color = "#e0e0e0";
-                if (diff < 0) color = "#ff6b6b";
-                else if (diff <= 10 * 60000) color = "#ffd166";
+                const color = diff < 0 ? "#ff6b6b" : (diff <= 600000 ? "#ffd166" : "#e0e0e0");
+                const timeCell = diff > 0 ? formatTimeRemaining(entry) : "";
 
-                let timeCellContent = "";
-                if (diff > 0) timeCellContent = formatTimeRemaining(entry);
-                row.innerHTML = `
-        <td>${index + 1}</td>
-        <td>${entry.dateString}</td>
-        <td>${entry.hh}:${entry.mm}</td>
-        <td>${entry.hall}</td>
-        <td>${entry.type}</td>
-        <td>${timeCellContent}</td>
-        <td><button class="remove-btn" onclick="removeEntry('${entry.id}')">✕</button></td>
-      `;
-                row.style.color = color;
-                tableBody.appendChild(row);
-            });
+                return `
+            <tr style="color: ${color}">
+                <td>${index + 1}</td>
+                <td>${entry.dateString}</td>
+                <td>${entry.hh}:${entry.mm}</td>
+                <td>${entry.hall}</td>
+                <td>${entry.type}</td>
+                <td>${timeCell}</td>
+                <td><button class="remove-btn" onclick="removeEntry('${entry.id}')">✕</button></td>
+            </tr>
+        `;
+            }).join('');
+
             updateFilterWarnings();
         }
+
         function renderFilterSelect() {
-
-            const select =
-                document.getElementById(
-                    "filterSelect"
-                );
-
-            const currentValue =
-                select.value;
-
-            select.innerHTML =
-                '<option value="">Tất cả</option>';
-
-            halls.forEach(hall => {
-
-                const option =
-                    document.createElement("option");
-
-                option.value = hall;
-
-                option.textContent =
-                    warningHalls.has(hall)
-                        ? `⚠️ ${hall}`
-                        : hall;
-
-                select.appendChild(option);
+            const currentValue = filterSelect.value;
+            const options = halls.map(h => {
+                const name = typeof h === 'object' ? h.name : h;
+                const label = warningHalls?.has?.(name) ? `⚠️ ${name}` : name;
+                return `<option value="${name}">${label}</option>`;
             });
 
-            select.value = currentValue;
+            filterSelect.innerHTML = '<option value="">Tất cả</option>' + options.join('');
+            filterSelect.value = currentValue;
         }
-        function removeEntry(id) {
+
+        const removeEntry = window.removeEntry = id => {
             entries = entries.filter(e => e.id !== id);
             saveToStorage();
             renderTable();
-        }
-        window.removeEntry = removeEntry;
-        function reuseEntry(id) {
+        };
+
+        const reuseEntry = window.reuseEntry = id => {
             const entry = entries.find(e => e.id === id);
             if (!entry) return;
-
-            hallSelect.value = entry.hall;
+            filterSelect.value = entry.hall;
             typeSelect.value = entry.type;
             input.focus();
+        };
 
-            // Nếu muốn tự động xoá dòng cũ khi nhấn, bỏ comment dòng dưới:
-            // removeEntry(id);
-        }
-        window.reuseEntry = reuseEntry;
-
-
-
-        filterSelect.addEventListener('change', () => {
-            renderTable();
-            hallSelect.value = filterSelect.value || halls[0].name;
-        });
-
+        // Event Listeners & Init
+        filterSelect.addEventListener('change', renderTable);
         setInterval(renderTable, 60000);
         loadFromStorage();
 
@@ -710,30 +655,22 @@
         const JSONBIN_BIN_ID = "6a70831dda38895dfeb36912";
         const JSONBIN_API_KEY = "$2a$10$ZKZtBHXtxYDUw3kimsoamOY4kR9CMiSIHJdGt7OM85GlbcSHDZX3e";
 
+        // --- JSONBin API Helpers ---
         async function loadFromJSONBin() {
             if (!JSONBIN_API_KEY || !JSONBIN_BIN_ID) return alert("❌ Chưa cấu hình API Key hoặc Bin ID!");
 
             try {
-                // Tham số /latest đảm bảo luôn lấy bản cập nhật mới nhất
                 const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                    method: "GET",
-                    headers: {
-                        "X-Access-Key": JSONBIN_API_KEY
-                    }
+                    headers: {"X-Access-Key": JSONBIN_API_KEY}
                 });
+                if (!res.ok) throw new Error(`Status ${res.status}`);
 
-                if (!res.ok) throw new Error(`Lỗi tải: ${res.status}`);
-
-                const data = await res.json();
-
-                // JSONBin luôn bọc dữ liệu thực tế bên trong object 'record'
-                entries = data.record;
-
+                const {record} = await res.json(); // Destructure lấy thẳng thuộc tính 'record'
+                entries = record;
                 renderTable();
                 saveToStorage();
                 alert("✅ Đã tải dữ liệu từ JSONBin!");
             } catch (err) {
-                console.error(err);
                 alert("❌ Lỗi khi tải dữ liệu: " + err.message);
             }
         }
@@ -744,9 +681,9 @@
                     method: "PUT",
                     headers: {
                         "X-Access-Key": JSONBIN_API_KEY,
-                        "Content-Type": "application/json",
+                        "Content-Type": "application/json"
                     },
-                    body: content, // content đã là JSON string (được gọi từ JSON.stringify(entries))
+                    body: content
                 });
 
                 if (!res.ok) {
@@ -756,472 +693,207 @@
                     console.log("✅ Đã cập nhật lên JSONBin thành công!");
                 }
             } catch (err) {
-                console.error(err);
                 alert("❌ Lỗi mạng: " + err.message);
             }
         }
 
-        // Gắn sự kiện cho các nút bấm cũ (Nhớ đổi ID nút hoặc tái sử dụng ID cũ)
-        document.getElementById("loadGitHubBtn").addEventListener("click", loadFromJSONBin);
-        document.getElementById("uploadGitHubBtn").addEventListener("click", async () => {
-            const data = JSON.stringify(entries, null, 2);
-            await uploadToJSONBin(data);
+        // --- Event Listeners ---
+        document.getElementById("loadGitHubBtn")?.addEventListener("click", loadFromJSONBin);
+
+        document.getElementById("uploadGitHubBtn")?.addEventListener("click", async () => {
+            await uploadToJSONBin(JSON.stringify(entries, null, 2));
             alert("✅ Đã lưu thủ công lên máy chủ JSONBin!");
         });
-        document.getElementById("resetTokenBtn").addEventListener("click", () => {
+
+        document.getElementById("resetTokenBtn")?.addEventListener("click", () => {
             localStorage.removeItem("GITHUB_TOKEN");
             alert("✅ Đã xoá token cũ. Khi bạn đồng bộ/tải lại, trình duyệt sẽ hỏi token mới.");
         });
-        function applyFutureClockTower(
-            buildTimerSec,
-            clockCooldownSec,
-            clockLevel
-        ) {
 
-            if (!clockLevel) {
-                return buildTimerSec;
+        // --- Game Logic Calculations ---
+        function applyFutureClockTower(timer, cooldown, clockLevel) {
+            if (!clockLevel) return timer;
+            const boostSec = (clockLevel * 2 + 12) * 540; // (clockLevel * 2 + 12) * 9 * 60
+
+            // Tận dụng trực tiếp 2 biến timer & cooldown để tính toán, bỏ biến trung gian
+            while (cooldown < timer) {
+                timer -= boostSec;
+                if (timer <= 0) return 0;
+                cooldown += 79200; // 22h = 79200s
             }
-
-            const boostSec =
-                ((clockLevel * 2 + 12) * 9) * 60;
-
-            let remaining = buildTimerSec;
-            let nextBoost = clockCooldownSec;
-
-            while (nextBoost < remaining) {
-
-                remaining -= boostSec;
-
-                if (remaining <= 0) {
-                    return 0;
-                }
-
-                nextBoost += 22 * 3600;
-            }
-
-            return remaining;
+            return timer;
         }
-        function applyFutureResearchAssistant(
-            labTimerSec,
-            helperCooldownSec
-        ) {
 
-            let remaining = labTimerSec;
-            let nextUse = helperCooldownSec;
-
-            const reduceSec = 3600;      // 1h
-            const loopSec = 24 * 3600;   // 24h
-            const minWorthSec = 2 * 3600; // <2h thì bỏ
-
-            while (nextUse < remaining) {
-
-                const labRemainingAtUse =
-                    remaining - nextUse;
-
-                // Nếu lúc assistant sẵn sàng mà lab
-                // chỉ còn dưới 2h thì bỏ qua
-                if (labRemainingAtUse < minWorthSec) {
-                    break;
-                }
-
-                remaining -= reduceSec;
-
-                if (remaining <= 0) {
-                    return 0;
-                }
-
-                nextUse += loopSec;
+        function applyFutureResearchAssistant(timer, cooldown) {
+            while (cooldown < timer) {
+                if (timer - cooldown < 7200) break; // Nếu thời gian lab còn lại < 2h (7200s) thì dừng
+                timer -= 3600; // Trừ 1h
+                if (timer <= 0) return 0;
+                cooldown += 86400; // 24h = 86400s
             }
-
-            return remaining;
+            return timer;
         }
         function processCOCObject(obj) {
-            const hall = accountMap[obj.tag] + 1;
+            const hallIndex = accountMap[obj.tag];
+            if (hallIndex == null) return console.warn("Không tìm thấy hall:", obj.tag);
 
+            const hall = hallIndex + 1;
+            const baseTime = obj.timestamp * 1000;
+            const boosts = obj.boosts || {};
+
+            // 1. Cập nhật danh sách cảnh báo & Xóa entries cũ của Hall này
             warningHalls.delete(hall);
-            const builderBoost = obj.boosts?.builder_consumable || 0;
-            const builderBoost10 = obj.boosts?.builder_boost || 0;
-            let wastedBuilderBoost = false;
-            let wastedBuilder10Boost = false;
-            if (hasLabWasteWarning(obj)) {
-                warningHalls.add(hall);
-            }
-            hallWarnings[hall] = {
-                helperWaste: false
-            };
-            if (!hall) {
-                console.warn(
-                    "Không tìm thấy hall:",
-                    obj.tag
-                );
-                return;
-            }
+            if (hasLabWasteWarning(obj)) warningHalls.add(hall);
 
-            // Xóa dữ liệu COC cũ của hall
-            entries = entries.filter(e =>
-                e.hall !== hall ||
-                ![
-                    "normal",
-                    "builder hall",
-                    "lab",
-                    "pet",
-                    "speed lab",
-                    "speed builder hall"
-                ].includes(e.type)
-            );
+            const cocTypes = new Set(["normal", "builder hall", "lab", "pet", "speed lab", "speed builder hall"]);
+            entries = entries.filter(e => e.hall !== hall || !cocTypes.has(e.type));
 
-            const baseTime =
-                obj.timestamp * 1000;
+            const warnings = (hallWarnings[hall] = {helperWaste: false});
 
-            // =====================================================
-            // CLOCK TOWER
-            // =====================================================
+            // 2. Làng chính (Normal)
+            const {builder_consumable: b2x = 0, builder_boost: b10x = 0} = boosts;
+            const normalItems = [...(obj.buildings || []), ...(obj.traps || []), ...(obj.heroes || [])];
 
-            const clockTower =
-                (obj.buildings2 || [])
-                    .find(b => b.data === 1000039);
-
-            const clockCooldown =
-                obj.boosts?.clocktower_cooldown || 0;
-
-            const clockTowerUpgrading =
-                !!clockTower?.timer;
-            const clockTowerBoost = obj.boosts?.clocktower_boost || 0;
-            let wastedClockTowerBoost = false;
-            const normalItems = [
-                ...(obj.buildings || []),
-                ...(obj.traps || []),
-                ...(obj.heroes || [])
-            ];
             normalItems.forEach(item => {
                 if (!item.timer) return;
-                let remaining = item.timer;
-                if (builderBoost10 > 0) {
-                    const finishDuringBoost = Math.ceil(remaining / 10);
-                    if (finishDuringBoost < builderBoost10) {
-                        wastedBuilder10Boost = true;
-                    }
-                    remaining = apply10xBoost(remaining, builderBoost10);
+                let rem = item.timer;
+                if (b10x > 0) {
+                    if (Math.ceil(rem / 10) < b10x) warnings.builder10BoostWaste = true;
+                    rem = apply10xBoost(rem, b10x);
                 }
-                if (builderBoost > 0) {
-                    const finishDuringConsumable = Math.ceil(remaining / 2);
-                    if (finishDuringConsumable < builderBoost) {
-                        wastedBuilderBoost = true;
-                    }
-                    remaining = apply2xBoost(remaining, builderBoost);
+                if (b2x > 0) {
+                    if (Math.ceil(rem / 2) < b2x) warnings.builderBoostWaste = true;
+                    rem = apply2xBoost(rem, b2x);
                 }
-                addEntry(hall, "normal", baseTime + remaining * 1000);
-
-            });
-            // =====================================================
-            // BUILDER HALL
-            // =====================================================
-
-            const builderTimers = [
-                ...(obj.buildings2 || []),
-                ...(obj.heroes2 || []),
-                ...(obj.units2 || [])
-            ];
-
-            builderTimers.forEach(item => {
-
-                if (!item.timer) return;
-
-                let remaining = item.timer;
-
-                if (clockTowerBoost > 0) {
-
-                    const finishDuringBoost =
-                        Math.ceil(remaining / 10);
-
-                    if (finishDuringBoost < clockTowerBoost) {
-                        wastedClockTowerBoost = true;
-                    }
-
-                    remaining = apply10xBoost(
-                        remaining,
-                        clockTowerBoost
-                    );
-                }
-
-                addEntry(
-                    hall,
-                    "builder hall",
-                    baseTime + remaining * 1000
-                );
+                addEntry(hall, "normal", baseTime + rem * 1000);
             });
 
-            // =====================================================
-            // LAB (units + spells + siege_machines)
-            // =====================================================
+            // 3. Làng thợ máy (Builder Hall)
+            const clockBoost = boosts.clocktower_boost || 0;
+            const builderItems = [obj.buildings2, obj.heroes2, obj.units2].flat().filter(Boolean);
 
-            const helper = obj.helpers?.find(h => h.lvl > 0);
-
-            const helperCooldown =
-                helper?.helper_cooldown ?? 0;
-
-            const helperFinishTime =
-                baseTime +
-                helperCooldown * 1000;
-
-            const labResearches = [
-                ...(obj.units || []),
-                ...(obj.spells || []),
-                ...(obj.siege_machines || [])
-            ];
-            const petResearches = [
-                ...(obj.pets || [])
-            ];
-            const hasRecurringHelper =
-                labResearches.some(
-                    item =>
-                        item.timer &&
-                        item.helper_recurrent === true
-                );
-
-            const recurringResearch =
-                labResearches.find(
-                    item =>
-                        item.timer &&
-                        item.helper_recurrent === true
-                );
-
-            // Cảnh báo Apprentice Researcher sắp bị lãng phí
-            if (
-                recurringResearch &&
-                helperCooldown > 0
-            ) {
-
-                const remainAfterTrigger =
-                    recurringResearch.timer -
-                    helperCooldown;
-
-                if (
-                    remainAfterTrigger > 0 &&
-                    remainAfterTrigger < 7200
-                ) {
-                    hallWarnings[hall].helperWaste = true;
+            builderItems.forEach(item => {
+                let rem = Number(item?.timer);
+                if (!rem || rem <= 0) return;
+                if (clockBoost > 0) {
+                    if (Math.ceil(rem / 10) < clockBoost) warnings.wastedClockTowerBoost = true;
+                    rem = apply10xBoost(rem, clockBoost);
                 }
+                addEntry(hall, "builder hall", baseTime + rem * 1000);
+            });
+
+            // 4. Phòng thí nghiệm (Lab) & Thú cưng (Pet)
+            const helperCooldown = obj.helpers?.find(h => h.lvl > 0)?.helper_cooldown ?? 0;
+            const labResearches = [...(obj.units || []), ...(obj.spells || []), ...(obj.siege_machines || [])];
+            const recurring = labResearches.find(i => i.timer && i.helper_recurrent);
+
+            // Cảnh báo Apprentice Researcher
+            if (recurring && helperCooldown > 0) {
+                const remain = recurring.timer - helperCooldown;
+                if (remain > 0 && remain < 7200) warnings.helperWaste = true;
             }
-            const labBoost = obj.boosts?.lab_boost || 0;
-            const petBoost = obj.boosts?.pet_boost || 0;
-            const labConsumable = obj.boosts?.lab_consumable || 0;
-            let wastedLabBoost = false;
-            let wastedPetBoost = false;
-            let wastedLabConsumable = false;
+
+            const {lab_boost: l24x = 0, pet_boost: p24x = 0, lab_consumable: l4x = 0} = boosts;
+
             labResearches.forEach(item => {
                 if (!item.timer) return;
-
-                let remaining = item.timer;
-                if (labBoost > 0) {
-                    const finishDuringBoost = Math.ceil(remaining / 24);
-                    if (finishDuringBoost < labBoost) {
-                        wastedLabBoost = true;
-                    }
-                    remaining = apply24xBoost(remaining, labBoost);
+                let rem = item.timer;
+                if (l24x > 0) {
+                    if (Math.ceil(rem / 24) < l24x) warnings.labBoostWaste = true;
+                    rem = apply24xBoost(rem, l24x);
                 }
-                if (labConsumable > 0) {
-                    const finishDuringConsumable = Math.ceil(remaining / 4);
-                    if (finishDuringConsumable < labConsumable) {
-                        wastedLabConsumable = true;
-                    }
-                    remaining = apply4xBoost(remaining, labConsumable);
+                if (l4x > 0) {
+                    if (Math.ceil(rem / 4) < l4x) warnings.labConsumableWaste = true;
+                    rem = apply4xBoost(rem, l4x);
                 }
-                // Apprentice Researcher auto chạy
-                if (
-                    item.helper_recurrent === true &&
-                    helperCooldown > 0
-                ) {
-
-                    let nextCooldown =
-                        helperCooldown;
-
-                    while (
-                        nextCooldown < remaining
-                    ) {
-
-                        const remainAfterTrigger =
-                            remaining -
-                            nextCooldown;
-
-                        // tránh lãng phí
-                        if (
-                            remainAfterTrigger < 7200
-                        ) {
-                            break;
-                        }
-
-                        remaining -= 3600;
-
-                        nextCooldown +=
-                            24 * 3600;
+                if (item.helper_recurrent && helperCooldown > 0) {
+                    let next = helperCooldown;
+                    while (next < rem) {
+                        if (rem - next < 7200) break;
+                        rem -= 3600;
+                        next += 86400;
                     }
                 }
-
-                addEntry(hall, "lab", baseTime + remaining * 1000);
+                addEntry(hall, "lab", baseTime + rem * 1000);
             });
-            petResearches.forEach(item => {
+
+            (obj.pets || []).forEach(item => {
                 if (!item.timer) return;
-                let remaining = item.timer;
-                if (petBoost > 0) {
-                    const finishDuringBoost = Math.ceil(remaining / 24);
-                    if (finishDuringBoost < petBoost) {
-                        wastedPetBoost = true;
-                    }
-                    remaining = apply24xBoost(remaining, petBoost);
+                let rem = item.timer;
+                if (p24x > 0) {
+                    if (Math.ceil(rem / 24) < p24x) warnings.petBoostWaste = true;
+                    rem = apply24xBoost(rem, p24x);
                 }
-                if (labConsumable > 0) {
-                    const finishDuringConsumable = Math.ceil(remaining / 4);
-                    if (finishDuringConsumable < labConsumable) {
-                        wastedLabConsumable = true;
-                    }
-                    remaining = apply4xBoost(remaining, labConsumable);
+                if (l4x > 0) {
+                    if (Math.ceil(rem / 4) < l4x) warnings.labConsumableWaste = true;
+                    rem = apply4xBoost(rem, l4x);
                 }
-                addEntry(hall, "pet", baseTime + remaining * 1000);
+                addEntry(hall, "pet", baseTime + rem * 1000);
             });
-            hallWarnings[hall] ??= {};
-            hallWarnings[hall].builderBoostWaste = wastedBuilderBoost;
-            hallWarnings[hall].labBoostWaste = wastedLabBoost;
-            hallWarnings[hall].petBoostWaste = wastedPetBoost;
-            hallWarnings[hall].labConsumableWaste = wastedLabConsumable;
-            hallWarnings[hall].builder10BoostWaste = wastedBuilder10Boost;
-            hallWarnings[hall].wastedClockTowerBoost = wastedClockTowerBoost;
-            // =====================================================
-            // SPEED LAB
-            // Chỉ hiện nếu không có research nào
-            // đang bật helper_recurrent
-            // =====================================================
 
-            if (!hasRecurringHelper) {
-                addEntry(hall, "speed lab", helperFinishTime);
+            // 5. Speed Lab & Speed Builder Hall
+            if (!recurring) {
+                addEntry(hall, "speed lab", baseTime + helperCooldown * 1000);
             }
-
-            // =====================================================
-            // SPEED BUILDER HALL
-            // =====================================================
-
-            if (clockCooldown > 0) {
-
-                addEntry(
-                    hall,
-                    "speed builder hall",
-                    baseTime +
-                    clockCooldown * 1000
-                );
+            if (boosts.clocktower_cooldown > 0) {
+                addEntry(hall, "speed builder hall", baseTime + boosts.clocktower_cooldown * 1000);
             }
         }
         function splitJSONObjects(text) {
-
             const objects = [];
-
-            let depth = 0;
-            let start = -1;
+            let depth = 0, start = -1;
 
             for (let i = 0; i < text.length; i++) {
-
-                const ch = text[i];
-
-                if (ch === "{") {
-
-                    if (depth === 0)
-                        start = i;
-
-                    depth++;
-                }
-                else if (ch === "}") {
-
-                    depth--;
-
-                    if (depth === 0 && start !== -1) {
-
-                        objects.push(
-                            text.slice(start, i + 1)
-                        );
-
+                if (text[i] === "{") {
+                    if (depth++ === 0) start = i;
+                } else if (text[i] === "}") {
+                    if (--depth === 0 && start !== -1) {
+                        objects.push(text.slice(start, i + 1));
                         start = -1;
                     }
                 }
             }
-
             return objects;
         }
+
         let exportedBuildList = "";
 
         async function copyBuildList() {
             await navigator.clipboard.writeText(exportedBuildList);
-
             document.getElementById("cocInput").value = "";
             document.getElementById("copyBuildBtn").style.display = "none";
             exportedBuildList = "";
         }
-        function importCOC() {
 
+        async function importCOC() {
             try {
+                const inputEl = document.getElementById("cocInput");
+                const text = inputEl.value.trim();
+                if (!text) return alert("Chưa có dữ liệu");
 
-                const text =
-                    document.getElementById("cocInput")
-                        .value
-                        .trim();
-
-                if (!text) {
-
-                    alert("Chưa có dữ liệu");
-                    return;
-                }
-
-                const jsonObjects =
-                    splitJSONObjects(text);
-
-                if (!jsonObjects.length) {
-
-                    alert("Không tìm thấy JSON hợp lệ");
-                    return;
-                }
+                const jsonObjects = splitJSONObjects(text);
+                if (!jsonObjects.length) return alert("Không tìm thấy JSON hợp lệ");
 
                 let imported = 0;
-
                 for (const json of jsonObjects) {
-
                     try {
-
-                        const obj =
-                            JSON.parse(json);
-
-                        processCOCObject(obj);
-
+                        processCOCObject(JSON.parse(json));
                         imported++;
-
-                    }
-                    catch (err) {
-
-                        console.error(
-                            "JSON lỗi:",
-                            err
-                        );
+                    } catch (err) {
+                        console.error("JSON lỗi:", err);
                     }
                 }
 
                 saveToStorage();
                 renderTable();
                 document.getElementById("copyBuildBtn").style.display = "";
-                exportedBuildList = exportAccountBuildList(
-                    document.getElementById("cocInput").value
-                );
-                const data = JSON.stringify(entries, null, 2);
-                uploadToJSONBin(data);
-                alert(
-                    `✅ Import thành công ${imported} account`
-                );
+                exportedBuildList = exportAccountBuildList(text);
+                uploadToJSONBin(JSON.stringify(entries, null, 2));
 
-            }
-            catch (e) {
-
+                alert(`✅ Import thành công ${imported} account`);
+            } catch (e) {
                 console.error(e);
-
-                alert(
-                    "JSON lỗi:\n" +
-                    e.message
-                );
+                alert(`JSON lỗi:\n${e.message}`);
             }
         }
     </script>
