@@ -887,6 +887,7 @@
                 saveToStorage();
                 renderTable();
                 document.getElementById("copyBuildBtn").style.display = "";
+                document.getElementById("cocInput").value = "";
                 exportedBuildList = exportAccountBuildList(text);
                 uploadToJSONBin(JSON.stringify(entries, null, 2));
 
