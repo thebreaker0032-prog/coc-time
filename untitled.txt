@@ -1,0 +1,25 @@
+fun defaultBuildTown2(){
+    accountBuildList.push(Map())
+    var id = accountBuildList.size - 1
+    currentAccId = id
+    accountBuildList[id].put("town", 2)
+    accountBuildList[id].put("clan", [1])
+    accountBuildList[id].put("der", [1, 1])
+    accountBuildList[id].put("can", [1])
+    accountBuildList[id].put("cam", [1])
+    accountBuildList[id].put("dmi", [1])
+    accountBuildList[id].put("rco", [1])
+    accountBuildList[id].put("dst", [1])
+    accountBuildList[id].put("rst", [1])
+    accountBuildList[id].put("barr", [1])
+    accountBuildList[id].put("time", [["", 0], ["", 0]])
+    accountBuildList[id].put("troop", ["", 0])
+    accountBuildList[id].put("goldStorage", [])
+    accountBuildList[id].put("elixirStorage", [])
+    accountBuildList[id].put("darkElixirStorage", [])
+    accountBuildList[id].put("bari", 1)
+    accountBuildList[id].put("nextTroop", ["bari"])
+    upgradedTown(2)
+    accountBuildList[id].put("orderBuild", [[], [], ["new@can-1", "new@dmi-1", "new@rco-1", "new@rto-1", "town-3", "cam-2", "barr-2", "dst-2", "dst-3"], ["dst-4", "new@cam-1", "new@dst-1", "dst-2", "new@dmi-1", "new@rco-1", "new@rst-1", "new@lab-1", "new@mor-1", "town-4", "cam-2", "dst-5", "dst-6", "dst-3", "dst-4", "dst-5", "dst-6"], ["new@hero-1", "dst-7", "new@rto-1", "new@dmi-1", "new@rco-1",  "new@rde-1", "town-5","dst-8", "dst-7", "dst-8", "rst-2", "rst-3", "rst-4", "rst-5", "rst-2", "rst-3", "rst-4", "rst-5"], ["new@cam-1", "new@can-1", "new@dmi-1", "new@rco-1", "new@rto-1", "new@rdt-1", "new@fac-1", "town-6","cam-2", "dst-9", "dst-9"], ["new@dmi-1", "new@rco-1", "new@mor-1", "new@rde-1", "new@rdt-1", "new@rsw-1", "town-7", ], ["new@can-1", "new@can-1", "new@rto-1", "new@cam-1", "new@mor-1", "new@rde-1", "new@nte-1", "new@nte-1", "new@darkelixird-1", "new@darkbarr-1", "new@darkelixirst-1", "town-8","cam-2", "dst-10", "dst-10", "rst-6", "rst-6", "rst-7", "rst-7", "rst-8", "rst-8", "rst-9", "rst-9"], ["hero-2", "new@lacks-1", "new@dst-1", "dst-2", "dst-3", "dst-4", "dst-5", "dst-6", "dst-7", "new@rst-1", "new@rto-1", "new@mor-1", "new@rdt-1", "new@nte-1", "new@darkelixird-1", "new@darkspell-1", "new@bto-1", "town-9", "rst-2", "rst-3", "rst-4", "rst-5", "rst-6", "rst-7", "rst-8", "rst-9"], ["hero-3", "new@dmi-1", "new@rco-1", "new@dst-1", "dst-2", "dst-3", "dst-4", "dst-5", "dst-6", "dst-7", "dst-8", "dst-8", "dst-9", "dst-9", "new@rst-1", "new@rto-1", "new@rde-1", "new@rdt-1", "new@nte-1", "new@rsw-1", "new@darkelixird-1", "new@bow-1", "new@bow-1", "town-10"], ["new@can-1", "new@rto-1", "new@bto-1", "new@bow-1", "new@fer-1", "new@fer-1", "town-11", "hero-4", "rst-2", "rst-3", "rst-4", "rst-5", "rst-6", "rst-7", "rst-8", "rst-9", "rst-10", "rst-10"], ["hero-5", "dst-10", "dst-10", "dst-11", "new@can-1", "new@rto-1", "new@rdt-1", "new@bow-1", "new@gle-1", "town-12", "dst-11", "dst-11", "dst-11", "rst-10", "rst-10", "rst-11"], ["new@nte-1", "new@fer-1", "new@rks-1", "town-13", "hero-6", "rst-11", "rst-11", "rst-11"], ["hero-7", "dst-12", "dst-12", "dst-12", "dst-12", "dst-13", "dst-13", "new@ter-1", "new@ter-1", "town-14"], ["new@eth-1", "town-15", "hero-8", "rst-12", "rst-12", "rst-12", "rst-12"], ["hero-9", "dst-13", "dst-13", "new@ellt-1", "new@ellt-1", "darkelixirst-2", "darkelixirst-3", "darkelixirst-4", "darkelixirst-5", "darkelixirst-6", "new@nol-1", "town-16"], [], [], []])
+    accountBuildList[id].put("buildLate", [])
+}
