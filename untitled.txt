@@ -1,22 +1,83 @@
-fun defaultBuildtownHall2(){
-    a.push(Map())
-    var id = a.size - 1
-    currentAccId = id
-    a[id].put("townHall", 2)
-    a[id].put("clanCastle", [1])
-    a[id].put("cannon", [1])
-    a[id].put("armyCamp", [1])
-    a[id].put("goldMine", [1])
-    a[id].put("elixirCollector", [1])
-    a[id].put("goldStorage", [1])
-    a[id].put("elixirStorage", [1])
-    a[id].put("barracks", [1])    
-    a[id].put("g", [])
-    a[id].put("e", [])
-    a[id].put("d", [])
-    a[id].put("orderBuild", [[], [], ["cannon-1", "goldMine-1", "elixirCollector-1", "archerTower-1", "townHall-3", "goldStorage-2", "goldStorage-3"], 
-	["goldStorage-4", "armyCamp-1", "goldStorage-1", "goldStorage-2", "goldMine-1", "elixirCollector-1", "elixirStorage-1", "laboratory-1", "mortar-1", "townHall-4", "goldStorage-5", "goldStorage-6", "goldStorage-3", "goldStorage-4", "goldStorage-5", "goldStorage-6"], ["heroHall-1", "goldStorage-7", "archerTower-1", "goldMine-1", "elixirCollector-1", "airDefense-1", "townHall-5","goldStorage-8", "goldStorage-7", "goldStorage-8", "elixirStorage-2", "elixirStorage-3", "elixirStorage-4", "elixirStorage-5", "elixirStorage-2", "elixirStorage-3", "elixirStorage-4", "elixirStorage-5"], ["armyCamp-1", "cannon-1", "goldMine-1", "elixirCollector-1", "archerTower-1", "wizardTower-1", "spellFactory-1", "townHall-6", "goldStorage-9", "goldStorage-9"], ["goldMine-1", "elixirCollector-1", "mortar-1", "airDefense-1", "wizardTower-1", "airSweeper-1", "townHall-7"],	["cannon-1", "cannon-1", "archerTower-1", "armyCamp-1", "mortar-1", "airDefense-1", "hiddenTesla-1", "hiddenTesla-1", "darkElixirDrill-1", "darkBarracks-1", "darkelixirStorage-1", "townHall-8", "goldStorage-10", "goldStorage-10", "elixirStorage-6", "elixirStorage-6", "elixirStorage-7", "elixirStorage-7", "elixirStorage-8", "elixirStorage-8", "elixirStorage-9", "elixirStorage-9"], ["heroHall-2", "blackSmith-1", "goldStorage-1", "goldStorage-2", "goldStorage-3", "goldStorage-4", "goldStorage-5", "goldStorage-6", "goldStorage-7", "elixirStorage-1", "archerTower-1", "mortar-1", "wizardTower-1", "hiddenTesla-1", "darkElixirDrill-1", "darkSpellFactory-1", "bombTower-1", "townHall-9", "elixirStorage-2", "elixirStorage-3", "elixirStorage-4", "elixirStorage-5", "elixirStorage-6", "elixirStorage-7", "elixirStorage-8", "elixirStorage-9"], ["heroHall-3", "goldMine-1", "elixirCollector-1", "goldStorage-1", "goldStorage-2", "goldStorage-3", "goldStorage-4", "goldStorage-5", "goldStorage-6", "goldStorage-7", "goldStorage-8", "goldStorage-8", "goldStorage-9", "goldStorage-9", "elixirStorage-1", "archerTower-1", "airDefense-1", "wizardTower-1", "hiddenTesla-1", "airSweeper-1", "darkElixirDrill-1", "xBow-1", "xBow-1", "townHall-10"], ["cannon-1", "archerTower-1", "bombTower-1", "xBow-1", "infernoTower-1", "infernoTower-1", "townHall-11", "heroHall-4", "elixirStorage-2", "elixirStorage-3", "elixirStorage-4", "elixirStorage-5", "elixirStorage-6", "elixirStorage-7", "elixirStorage-8", "elixirStorage-9", "elixirStorage-10", "elixirStorage-10"], ["heroHall-5", "goldStorage-10", "goldStorage-10", "goldStorage-11", "cannon-1", "archerTower-1", "wizardTower-1", "xBow-1", "eagleArtillery-1", "townHall-12", "goldStorage-11", "goldStorage-11", "goldStorage-11", "elixirStorage-10", "elixirStorage-10", "elixirStorage-11"], ["hiddenTesla-1", "infernoTower-1", "workShop-1", "townHall-13", "heroHall-6", "elixirStorage-11", "elixirStorage-11", "elixirStorage-11"],	["heroHall-7", "goldStorage-12", "goldStorage-12", "goldStorage-12", "goldStorage-12", "goldStorage-13", "goldStorage-13", "scattershot-1", "scattershot-1", "townHall-14"], ["petHouse-1", "townHall-15", "heroHall-8", "elixirStorage-12", "elixirStorage-12", "elixirStorage-12", "elixirStorage-12"], ["heroHall-9", "goldStorage-13", "goldStorage-13", "spellTower-1", "spellTower-1", "darkElixirStorage-2", "darkElixirStorage-3", "darkElixirStorage-4", "darkElixirStorage-5", "darkElixirStorage-6", "monolith-1", "townHall-16"], [], [], []])
-    a[id].put("buildLate", ["barracks-2", "darkBarracks-2", "armyCamp-2", "armyCamp-2", "armyCamp-2", "armyCamp-2", "laboratory-2", "spellFactory-2", "darkSpellFactory-2", "clanCastle-2", "petHouse-2", "barracks-3", "darkBarracks-3", "armyCamp-3", "armyCamp-3", "armyCamp-3", "armyCamp-3", "laboratory-3", "spellFactory-3", "darkSpellFactory-3", "clanCastle-3", "petHouse-3", "barracks-4", "darkBarracks-4", "armyCamp-4", "armyCamp-4", "armyCamp-4", "armyCamp-4", "laboratory-4", "spellFactory-4", "darkSpellFactory-4", "clanCastle-4", "petHouse-4", "barracks-5", "darkBarracks-5", "armyCamp-5", "armyCamp-5", "armyCamp-5", "armyCamp-5", "laboratory-5", "spellFactory-5", "darkSpellFactory-5", "clanCastle-5", "petHouse-5", "barracks-6", "darkBarracks-6", "armyCamp-6", "armyCamp-6", "armyCamp-6", "armyCamp-6", "laboratory-6", "spellFactory-6", "darkSpellFactory-6", "clanCastle-6", "petHouse-6", "barracks-7", "armyCamp-7", "armyCamp-7", "armyCamp-7", "armyCamp-7", "laboratory-7", "spellFactory-7", "darkSpellFactory-7", "clanCastle-7", "petHouse-7", "barracks-8", "armyCamp-8", "armyCamp-8", "armyCamp-8", "armyCamp-8", "laboratory-8", "spellFactory-8", "clanCastle-8", "petHouse-8", "barracks-9", "armyCamp-9", "armyCamp-9", "armyCamp-9", "armyCamp-9", "laboratory-9", "spellFactory-9", "clanCastle-9", "petHouse-9", "armyCamp-10", "armyCamp-10", "armyCamp-10", "armyCamp-10", "laboratory-10", "clanCastle-10", "armyCamp-11", "armyCamp-11", "armyCamp-11", "armyCamp-11", "laboratory-11", "clanCastle-11", "armyCamp-12", "armyCamp-12", "armyCamp-12", "armyCamp-12", "laboratory-12", "clanCastle-12", "laboratory-13", "laboratory-14"])
-	a[id].put("time", [["", 0], ["", 0]])
-    a[id].put("troop", ["", 0])
+//while (Region(362, 57, 1065, 816).find("a")) {click(Point(1600, 0))}
+//while (!Region(1459, 620, 20, 20).find("build")) { wait(delay)}
+//click(Point(1471, 625))
+//while (Region(362, 57, 1065, 816).find("a")) {click(Point(1600, 0))}
+setData()
+defaultBuildtownHall2()
+setUp()
+fun checkBuilderBusy(){
+	var timeRemain = timeNear - Sys.currentTime()
+	if (timeNear > Sys.currentTime()) {
+		if (timeNear < Sys.currentTime() + 10000) {
+			//openGame()
+			click(Point(1600, 0))
+		} else {
+			//farming = 1
+			//waitF = 1
+		}
+		return "Bận"
+	}
+	//openGame()
+	setUp()
+	return "Không bận"
 }
+fun xaynha(build){
+	var lv = build[1]
+	var time = build[2]
+	
+	while (!Region(1459, 620, 20, 20).find("build")) {
+		click(Point(1600, 0))
+		wait(delay)
+	}
+	wait(200)
+	click(Point(1474, 641))
+	wait(300)
+	var targetBuild = Region(1130,55,70,575).find(build[3])
+	while(!targetBuild){
+		wait(delay)
+		swipe([SwipePoint(Point(1350, 250), 10, 40), SwipePoint(Point(1350, 120), 0, 40)], SParam.repeat(1).delay(0).waitNext(10).random(0))
+		wait(300)
+		targetBuild = Region(1130,55,70,575).find(build[3], FParam.mScore(0.9))
+	}
+	click(targetBuild.getPoint())
+	build = build[0]
+	if(lv > 1){ 
+		while (!Region(995,581,30,30).find("xacnhan")) {wait(delay)}
+		click(Point(1033, 624))
+	}else{
+		if(build == "clanCastle"){
+			while (!Region(995,581,30,30).find("clanCastle")) {wait(delay)}
+			click(Point(1033, 624))
+		}else{
+			var okBuild = Region(483, 60, 724, 618).find("ok")
+			while (!okBuild) {
+				wait(delay)
+				okBuild = Region(483, 60, 724, 618).find("ok")
+			}
+			click(okBuild.getPoint())
+		}
+	}
+	//
+	//setTimeBuild(build, Sys.currentTime() + time * 1000, lv)
+}
+
+fun buildUpgrade(){
+	if (checkBuilderBusy() == "Bận") return "Bận"
+	else {
+		var build = buildSelect()
+		xaynha(build)
+		//copyAllData()
+		return "Không bận"
+	}
+
+}
+
+buildUpgrade()
+//Sys.alert(buildSelect())
+
+////"thiếu tài nguyên" => nang tài nguyên
+////"đang them tài nguyên" => build orderBuild khác, hết orderBuild thì buildDelay
+////"build được" => truyền build, buildLv, buildTime
+
+//Sys.alert([build, buildLv, buildTime, buildPay, buildResource, resource, resourceFuture, okBuild])
+Sys.stop()
