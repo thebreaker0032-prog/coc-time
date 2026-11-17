@@ -1,0 +1,162 @@
+var townLv
+var buildData
+var orderBuild
+var buildLate
+
+fun getStorage(build, storage){
+	var buildStorage = a[id].get(build)
+	var b = buildList.get(build)
+	if (buildStorage != null) {
+		for (var i = 0; i < buildStorage.size; i = i + 1) {
+			storage = storage + b[buildStorage[i]][2]
+		}
+	}
+	var storageAll = [storage, storage]
+	for (var i = 0; i < buildData.size; i = i + 1) {
+		if (buildData[i].indexOf(build) > -1) {
+			storageAll[0] = storageAll[0] + b[buildData[i][2] - 1][2]
+			storageAll[1] = storageAll[1] + b[buildData[i][2]][2]
+		}
+	}
+	return storageAll
+}
+
+fun sortTime(a, b) {
+	if (a == null or b == null) return 0
+	a = Num.parse(a[1])
+	b = Num.parse(b[1])
+	if (a < b) return -1
+	if (a > b) return 1
+	return 0
+}
+
+fun getListTime(){
+	var sorted = []
+	
+	for (var i = 0; i < a.size; i = i + 1) {
+		var timeBuild = a[i].get("time")
+		for (var j = 0; j < timeBuild.size; j = j + 1) {
+			var item
+			if(timeBuild[j].size > 2) item = [i, timeBuild[j][1], timeBuild[j][0] + "-" + timeBuild[j][2]]
+			else item = [i, timeBuild[j][1], timeBuild[j][0]]
+			sorted.push(item)
+		}
+	}
+	sorted.sort(sortTime)
+	var result = []
+	var id = []
+	for (var k = 0; k < sorted.size; k = k + 1) {
+		var timeRemain = Num.parse(sorted[k][1]) - Sys.currentTime()
+		result.push((sorted[k][0] + 1) + "-" + sorted[k][2] + ": " + Math.floor(timeRemain / (1000 * 60 * 60 * 24)) + "d" + Math.floor((timeRemain % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + "h" + Math.floor((timeRemain % (1000 * 60 * 60)) / (1000 * 60)) + "p" + Math.floor((timeRemain % (1000 * 60)) / 1000))
+		id.push(sorted[k][0])
+	}
+	Sys.log(result)
+	return id
+}
+
+fun upgradedTown(){
+	var town = buildList.get("townHall")
+	townLv = a[id].get("townHall")[0]
+	a[id].put("townLv", townLv)
+	a[id].put("g", getStorage("goldStorage", town[0][townLv]))
+	a[id].put("e", getStorage("elixirStorage", town[0][townLv]))
+	a[id].put("d", getStorage("darkElixirStorage", town[1][townLv]))
+	town = town[townLv]
+	orderBuild = a[id].get("orderBuild")
+	buildLate = a[id].get("buildLate")
+	var orderOld = orderBuild[townLv - 1]
+	var orderBuildAcc = orderBuild[townLv]
+	for(var j = 0; j < orderOld.size; j = j + 1){
+		orderBuildAcc.unshift(orderOld[j])
+	}
+	orderBuild[townLv - 1] = []
+	Sys.log("Đã upgrade Town: " + townLv)
+}
+
+fun updateStorage(build){
+	
+}
+
+fun setUpgBuild(build, lvl){
+	if (build == "") return
+	var upB = a[id].get(build)
+	if (build == "townHall") {
+
+		upB.push(lvl)
+
+		buildData[0][0] = ""
+		upgradedTown()
+
+	}else{
+		if (upB == null) {
+			upB = []
+			a[id].put(build, [lvl])
+		}else{
+			upB.push(lvl)
+			upB.sort()
+		}
+		buildData[0][0] = ""
+		var n = ["goldStorage", "elixirStorage", "darkElixirStorage"]
+		n = n.indexOf(build)
+		if (n > -1) {
+			var town = buildList.get("townHall")
+			if (n == 0) a[id].put("goldStorage", getStorage(build, town[0][townLv]))
+			else if (n == 1) a[id].put("elixirStorage", getStorage(build, town[0][townLv]))
+			else a[id].put("darkElixirStorage", getStorage(build, town[1][townLv]))
+		}
+	}
+}
+
+fun getMin(arr, max){
+	if (arr == null or arr.size == 0) return -1
+	var minItem = arr[0]
+	for (var i = 1; i < arr.size; i = i + 1)
+		if (minItem > arr[i]) minItem = arr[i]
+	if (minItem == max) return 0
+	Sys.log("get level từ " + arr + " : " + (minItem + 1))
+	return minItem + 1
+}
+
+fun logTable(){
+	var count = 30
+	for(var i = 0; i < count; i = i + 1){
+		if(count > 99){
+			if(i>99) Sys.log("["+i+"]")
+			else if(i>9 and i<100)Sys.log("["+i+" ]")
+			else Sys.log("["+i+"  ]")
+		}else if(count>9){
+			if(i>9 and i<100)Sys.log("["+i+"]")
+			else Sys.log("["+i+" ]")
+		}else Sys.log("["+i+"]")
+	}
+}
+
+fun getInfoBuild(build, buildLv){
+	var obj = a[id].get(build)
+	var isMissingPrevLevel = buildLv > 1 and obj != null and obj.indexOf(buildLv - 1) == -1
+	var isLimitExceeded = false
+	if (buildLv == 1) {
+		var activeCount = obj.size + a[id].get("time").filter(item => item[0] == build).size
+		isLimitExceeded = activeCount >= countBuild.get(build)[townLv]
+	}
+	if (isMissingPrevLevel or isLimitExceeded) return [build, buildLv, null, build + "-" + buildLv, null, "không thể xây"]
+	if (buildLv > 1 and (obj == null or obj.size == 0 or buildLv > buildList.get(build)[0][townLv])) return [null, null, null, null, null, "đang them tài nguyên"]
+  	var buildInfo = buildList.get(build)
+	var buildTime = buildInfo[buildLv]
+	var buildPay = Num.parse(buildTime[0])
+	buildTime = buildTime[1]
+	buildInfo = buildInfo[0]
+	var buildResource = buildInfo[0]
+	var resource = a[id].get(buildResource)
+	var resourceFuture = resource[1]
+	resource = resource[0]
+	var okBuild
+	if(buildPay > resource) {
+		if(buildPay > resourceFuture) okBuild = "thiếu tài nguyên"
+		else okBuild = "đang them tài nguyên"
+		if(buildResource == "g") buildResource = "goldStorage"
+		else if(buildResource == "e") buildResource = "elixirStorage"
+		else buildResource = "darkElixirStorage"
+	}else okBuild = "build được"
+	return [build, buildLv, buildTime, build+"-"+buildLv, buildResource, okBuild]
+}
