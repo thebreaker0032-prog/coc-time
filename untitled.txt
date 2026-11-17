@@ -1,7 +1,7 @@
 //while (Region(362, 57, 1065, 816).find("a")) {click(Point(1600, 0))}
 //while (!Region(1459, 620, 20, 20).find("build")) { wait(delay)}
 //click(Point(1471, 625))
-//while (Region(362, 57, 1065, 816).find("a")) {click(Point(1600, 0))}
+////while (Region(362, 57, 1065, 816).find("a")) {click(Point(1600, 0))}
 setData()
 defaultBuildtownHall2()
 setUp()
