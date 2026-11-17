@@ -1,0 +1,96 @@
+var timeNear
+fun setAllBuildCompleted(){
+	for (var i = 0; i < buildData.size; i = i + 1) {
+		buildData[i][1] = Num.parse(buildData[i][1])
+		if (buildData[i].size > 2 and Sys.currentTime() >= buildData[i][1]) {
+			//setUpgBuild(buildData[i][0], buildData[i][2])
+			buildData[i] = ["", 0]
+		}
+
+	}
+}
+
+fun setUp(){
+	orderBuild = a[id].get("orderBuild")
+	buildLate = a[id].get("buildLate")
+	var town = buildList.get("townHall")
+	townLv = a[id].get("townLv")
+	buildData = a[id].get("time")
+	buildData.sort(sortTime)
+	setAllBuildCompleted()
+	a[id].put("g", getStorage("goldStorage", town[0][townLv]))
+	a[id].put("e", getStorage("elixirStorage", town[0][townLv]))
+	a[id].put("d", getStorage("darkElixirStorage", town[1][townLv]))
+	timeNear = buildData[0][1]
+}
+
+fun getBuildNext(buildInCheck){
+	var build = a[id].get("orderBuild")[townLv]
+	if(build.size == 0){
+		build = a[id].get("buildLate").shift()
+		buildInCheck[1].push(build)
+		build = build.split("-")
+		build = getInfoBuild(build[0], Num.parse(build[1]))
+		return [build, buildInCheck]
+	}else{
+		build = build.shift()
+		buildInCheck[0].push(build)
+		build = build.split("-")
+		build = getInfoBuild(build[0], Num.parse(build[1]))
+		return [build, buildInCheck]
+	}
+}
+
+fun checkBuildNext(build, buildInCheck){
+	if(build[5] == "thiếu tài nguyên"){
+		if(a[id].get(build[4]).size == 0) {
+			build = getBuildNext(buildInCheck)
+			return checkBuildNext(build[0], build[1])
+		}else{
+			build = getInfoBuild(build[4], Num.parse(a[id].get(build[4])[0]) + 1)
+			return checkBuildNext(build, buildInCheck)
+		}
+	}else if(build[5] == "đang them tài nguyên") {
+		build = getBuildNext(buildInCheck)
+		return checkBuildNext(build[0], build[1])
+	}else if(build[5] == "không thể xây"){
+		for (var i = 0; i < 2; i = i + 1){
+			var index = buildInCheck[i].indexOf(build[3])
+			if (index > -1) {
+				buildInCheck[i].pop()
+				build = getBuildNext(buildInCheck)
+				return checkBuildNext(build[0], build[1])
+			}
+		}
+	}
+	return build
+}
+
+fun buildSelect(){
+	var buildInCheck = [[],[]]
+	var build = getBuildNext(buildInCheck)
+	build = checkBuildNext(build[0], build[1])
+	build.pop()
+	for (var i = 0; i < 2; i = i + 1){
+		var index = buildInCheck[i].indexOf(build[3])
+		if (index > -1) {
+			buildInCheck[i].pop()
+			break
+		}
+		if(i == 1){
+			var n = ["goldStorage", "elixirStorage", "darkElixirStorage"]
+			if(n.indexOf(build[0]) > -1) {
+				for (var i = 0; i < orderBuild.size; i = i + 1){
+					var index = orderBuild[i].indexOf(build[3])
+					if(index > -1) {
+						orderBuild[i].removeAt(index)
+						break
+					}
+				}
+			}
+		}
+	}
+	orderBuild[townLv] = buildInCheck[0].concat(orderBuild[townLv])
+	buildLate = buildInCheck[1].concat(buildLate)
+	return build
+}
