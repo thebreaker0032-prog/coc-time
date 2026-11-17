@@ -1,0 +1,131 @@
+fun age(){
+	while (!Region(637,553,50,50).find("ageBoard")) {wait(delay)}
+	click(Point(930, 451))
+	click(Point(930, 451))
+	click(Point(929, 535))
+}
+fun infoWarning(){
+	while (!Region(1109,565,60,50).find("infoWarningOK")) {wait(delay)}
+	click(Point(1141, 583))
+}
+fun xayCannon(){
+	while (!Region(1459, 620, 20, 20).find("build")) {
+		click(Point(1600, 0))
+		wait(delay)
+	}
+	wait(100)
+	click(Point(1474, 641))
+	while(!Region(1130,55,70,575).find("cannon-1")){ wait(delay)}
+	click(Point(1347, 154)) 
+	var okBuild = Region(483, 60, 724, 618).find("c")
+	while (!okBuild) {
+		wait(delay)
+		okBuild = Region(483, 60, 724, 618).find("c")
+	}
+	click(okBuild.getPoint())
+	Sys.log(buildList.get("cannon")[1][1]*1000)
+	wait(buildList.get("cannon")[1][1]*1000)
+}
+fun combatGoblin1(){
+	while (!Region(971,545,30,30).find("goblinAttack")) { wait(delay)}
+	click(Point(1038, 588))
+	while (!Region(399,429,30,30).find("attackGoblin")) { 
+		click(Point(1600, 0))
+		wait(delay)
+	}
+	click(Point(466, 456))
+	while (!Region(304,616,30,30).find("wizard")) {wait(delay)}
+	click(Point(316, 649))
+	for (var i = 0; i < 5; i = i + 1)
+click(Point(935, 332))
+	Sys.globalAction("recent")
+	wait(500)
+	swipe([SwipePoint(Point(300, 700), 100, 50), SwipePoint(Point(850, 700), 0, 50)], SParam.repeat(1).delay(0).waitNext(10).random(0))
+	wait(500)
+	Sys.openApp("com.supercell.clashofclans", "com.supercell.titan.GameApp")
+}
+fun xaynha1(){
+	var buildListNewAcc = ["builder-1", "elixirCollector-1", "elixirStorage-1", "goldStorage-1", "barracks-1"]
+	for(var i = 0; i < buildListNewAcc.size; i = i + 1){
+		while (!Region(1459, 620, 20, 20).find("build")) {
+			click(Point(1600, 0))
+			wait(delay)
+		}
+		wait(200)
+		click(Point(1474, 641))
+		while(!Region(1130,55,70,575).find(buildListNewAcc[i])){ wait(delay)}
+		click(Point(1347, 154)) 
+		var okBuild = Region(483, 60, 724, 618).find("c")
+		while (!okBuild) {
+			wait(delay)
+			okBuild = Region(483, 60, 724, 618).find("c")
+		}
+		click(okBuild.getPoint())
+		Sys.log(buildList.get(buildListNewAcc[i].split("-")[0])[1][1]*1000)
+		wait(buildList.get(buildListNewAcc[i].split("-")[0])[1][1]*1000)
+	}
+}
+fun luyenQuan(){
+	while(!Region(869, 545, 30, 30).find("luyenQuan")){ wait(delay)}
+	click(Point(867, 558))
+	while(!Region(963,215,30, 30).find("chonQuan")){ wait(delay)}
+	click(Point(989, 233))
+	while(!Region(256,446,30, 30).find("babarianQuan")){ wait(delay)}
+	for (var i = 0; i < 5; i = i + 1) {
+		click(Point(237, 495))
+		click(Point(237, 495))
+		click(Point(237, 495))
+		click(Point(237, 495))
+	}
+}
+fun combatGoblin2(){
+	while (!Region(107, 620, 30, 30).find("attack")) {
+		click(Point(1600, 0))
+		wait(delay)
+	}
+	var babarianAttack = Region(307, 639, 25, 25).find("j")
+	while (!babarianAttack) {
+		click(Point(131, 633))
+		wait(250)
+		click(Point(482, 508))
+		wait(100)
+		babarianAttack = Region(307, 639, 25, 25).find("j")
+	}
+	click(babarianAttack.getPoint())
+	for (var i = 0; i < 5; i = i + 1) click(Point(492, 327))
+	Sys.globalAction("recent")
+	wait(500)
+	swipe([SwipePoint(Point(300, 700), 100, 50), SwipePoint(Point(850, 700), 0, 50)], SParam.repeat(1).delay(0).waitNext(10).random(0))
+	wait(500)
+	Sys.openApp("com.supercell.clashofclans", "com.supercell.titan.GameApp")
+}
+fun xaynha2(){
+	while (!Region(726, 145, 30, 30).find("name")) { 
+		click(Point(1600, 0))
+		wait(delay)
+	}
+	click(Point(801, 299))
+	click(Point(1076, 590))
+	click(Point(1295, 436))
+	click(Point(568, 439))
+	click(Point(568, 439))
+	click(Point(1404, 664))
+	while (!Region(362, 57, 1065, 816).find("a")) {wait(delay)}
+	click(Point(829, 360))
+	while (!Region(855,547,30,30).find("nangcap")) {wait(delay)}
+	click(Point(873, 561))
+	while (!Region(995,581,30,30).find("xacnhan")) {wait(delay)}
+	click(Point(1033, 624))
+}
+fun createNewAccount(){
+	setData()
+	age()
+	infoWarning()
+	xayCannon()
+	combatGoblin1()
+	xaynha1()
+	luyenQuan()
+	combatGoblin2()
+	xaynha2()
+}
+//createNewAccount()
