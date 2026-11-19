@@ -8,6 +8,7 @@ fun getStorage(build, storage){
 	var b = buildList.get(build)
 	if (buildStorage != null) {
 		for (var i = 0; i < buildStorage.size; i = i + 1) {
+			Sys.log([storage,b[buildStorage[i]][2]])
 			storage = storage + b[buildStorage[i]][2]
 		}
 	}
@@ -53,7 +54,16 @@ fun getListTime(){
 	Sys.log(result)
 	return id
 }
-
+fun upgradeStorage(buildName){
+	var n = ["goldStorage", "elixirStorage", "darkElixirStorage"]
+	n = n.indexOf(buildName)
+	if (n > -1) {
+		var town = buildList.get("townHall")
+		if (n == 0) a[id].put("g", getStorage(buildName, town[0][townLv]))
+		else if (n == 1) a[id].put("e", getStorage(buildName, town[0][townLv]))
+		else a[id].put("d", getStorage(buildName, town[1][townLv]))
+	}
+}
 fun upgradedTown(){
 	var town = buildList.get("townHall")
 	townLv = a[id].get("townHall")[0]
@@ -66,44 +76,40 @@ fun upgradedTown(){
 	buildLate = a[id].get("buildLate")
 	var orderOld = orderBuild[townLv - 1]
 	var orderBuildAcc = orderBuild[townLv]
-	for(var j = 0; j < orderOld.size; j = j + 1){
+	for(var j = orderOld.size-1; j >= 0 ; j = j - 1){
 		orderBuildAcc.unshift(orderOld[j])
 	}
 	orderBuild[townLv - 1] = []
 	Sys.log("Đã upgrade Town: " + townLv)
 }
-
-fun updateStorage(build){
-	
+fun setTimeBuild(name, time, lv){
+	if(lv>1){
+		var build = a[id].get(name)
+		build.removeAt(build.indexOf(lv-1))
+	}
+	buildData[0] =  [name, Sys.currentTime() + time * 1000, lv]
+	buildData.sort(sortTime)
+	upgradeStorage(name)
 }
+fun setUpgBuild(name, lv){
+	if (name == "") return
+	var build = a[id].get(name)
+	if (name == "townHall") {
 
-fun setUpgBuild(build, lvl){
-	if (build == "") return
-	var upB = a[id].get(build)
-	if (build == "townHall") {
-
-		upB.push(lvl)
-
+		build.push(lv)
 		buildData[0][0] = ""
 		upgradedTown()
 
 	}else{
-		if (upB == null) {
-			upB = []
-			a[id].put(build, [lvl])
+		if (build == null) {
+			build = []
+			a[id].put(name, [lv])
 		}else{
-			upB.push(lvl)
-			upB.sort()
+			build.push(lv)
+			build.sort((a, b) => a - b)
 		}
 		buildData[0][0] = ""
-		var n = ["goldStorage", "elixirStorage", "darkElixirStorage"]
-		n = n.indexOf(build)
-		if (n > -1) {
-			var town = buildList.get("townHall")
-			if (n == 0) a[id].put("goldStorage", getStorage(build, town[0][townLv]))
-			else if (n == 1) a[id].put("elixirStorage", getStorage(build, town[0][townLv]))
-			else a[id].put("darkElixirStorage", getStorage(build, town[1][townLv]))
-		}
+		upgradeStorage(name)
 	}
 }
 
@@ -130,14 +136,37 @@ fun logTable(){
 		}else Sys.log("["+i+"]")
 	}
 }
+fun copyAllData(){
+	var stringMap = ""
+	for (var k = 0; k < a.size; k = k + 1) {
+		var keyMap = a[k].keys()
+		var key
+		var value
+		stringMap = stringMap + "a.push(Map())\n"
+		for (var i = 0; i < keyMap.size; i = i + 1) {
+			key = keyMap[i]
+			value = a[k].get(key)
+			if (key == "g" or key == "e") {
+				value[0] = value[0] + ""
+				value[1] = value[1] + ""
+			}else if (key == "time") {
+				for (var j = 0; j < value.size; j = j + 1) {
+					value[j][1] = "" + value[j][1]
 
+				}
+			}
+			stringMap = stringMap + "a[" + k + "].put(\"" + key + "\", " + value + ")\n"
+		}
+	}
+	Clipboard.copy(stringMap)
+}
 fun getInfoBuild(build, buildLv){
 	var obj = a[id].get(build)
 	var isMissingPrevLevel = buildLv > 1 and obj != null and obj.indexOf(buildLv - 1) == -1
 	var isLimitExceeded = false
 	if (buildLv == 1) {
-		var activeCount = obj.size + a[id].get("time").filter(item => item[0] == build).size
-		isLimitExceeded = activeCount >= countBuild.get(build)[townLv]
+		var countInBuild = a[id].get("time").filter(item => item[0] == build)
+		if(countInBuild != null and obj != null) isLimitExceeded = obj.size + countInBuild.size >= countBuild.get(build)[townLv]
 	}
 	if (isMissingPrevLevel or isLimitExceeded) return [build, buildLv, null, build + "-" + buildLv, null, "không thể xây"]
 	if (buildLv > 1 and (obj == null or obj.size == 0 or buildLv > buildList.get(build)[0][townLv])) return [null, null, null, null, null, "đang them tài nguyên"]
