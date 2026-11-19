@@ -3,7 +3,7 @@ fun setAllBuildCompleted(){
 	for (var i = 0; i < buildData.size; i = i + 1) {
 		buildData[i][1] = Num.parse(buildData[i][1])
 		if (buildData[i].size > 2 and Sys.currentTime() >= buildData[i][1]) {
-			//setUpgBuild(buildData[i][0], buildData[i][2])
+			setUpgBuild(buildData[i][0], buildData[i][2])
 			buildData[i] = ["", 0]
 		}
 
@@ -71,6 +71,7 @@ fun buildSelect(){
 	var build = getBuildNext(buildInCheck)
 	build = checkBuildNext(build[0], build[1])
 	build.pop()
+	Sys.log(buildInCheck)
 	for (var i = 0; i < 2; i = i + 1){
 		var index = buildInCheck[i].indexOf(build[3])
 		if (index > -1) {
